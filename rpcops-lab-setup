@@ -1,0 +1,307 @@
+#!/bin/bash
+
+# Add additional deployment options: openstack-ansible, kolla, fuel, puppet, chef
+
+# Check for existing lab
+if [ -e "/root/.labconfig" ]; then
+  echo -e "Lab exists already"
+  cat /root/.labconfig
+  exit 1
+fi
+
+# Configure cobbler (unattended setup handler)
+
+# $1 will be the lab configuration requested
+# if not set, will use default
+# ex. bash rpcops-lab-setup cephonly
+
+# Get all defined lab configurations
+# LABS=( `ls -1 resources/labconfigs/` )
+#
+# # Check if a configuration was passed in [default] if not
+# if [ "$#" -eq 1 ]; then
+#   for LAB in ${LABS[@]}
+#   do
+#     # Set LAB_CONFIG
+#     if [ $LAB == $1 ]; then
+#       LAB_CONFIG=$1
+#     else
+#       LAB_CONFIG='default'
+#     fi
+#   done
+# else
+#   LAB_CONFIG='default'
+# fi
+
+# Move to the root directory as starting point
+cd /root/rpcops-onmetal-labconfigurator
+
+# Set LAB_CONFIG [default for now]
+if ! [ -z "$1" ]; then
+  LAB_CONFIG=$1
+else
+  LAB_CONFIG='default'
+fi
+
+# Set BACKING_FILE
+if [ ${LAB_CONFIG} != 'kolla' ]; then
+  BACKING_FILE='/var/lib/libvirt/images/nodebase.qcow2'
+else
+  BACKING_FILE='/var/lib/libvirt/images/kabase.qcow2'
+fi
+
+# Node types
+TYPES=( infra network logging compute object storage ceph kolla )
+
+function wait_ssh() {
+echo "Waiting for all nodes to become available."
+for node in $(get_all_hosts); do
+  if [ ${LAB_CONFIG} != 'kolla' ]; then
+    echo "Waiting for node: ${node%%":"*} on 172.29.236.${node#*":"}"
+    ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 172.29.236.${node#*":"} exit > /dev/null
+    while test $? -gt 0; do
+      sleep 7
+      ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 172.29.236.${node#*":"} exit > /dev/null
+    done
+  else
+    echo "Waiting for node: ${node%%":"*} on 10.5.0.${node:8:2}"
+    ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 10.5.0.${node:8:2} exit > /dev/null
+    while test $? -gt 0; do
+      sleep 7
+      ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 10.5.0.${node:8:2} exit > /dev/null
+    done
+  fi
+done
+}
+
+function get_host_type () {
+python <<EOF
+import json
+with open('resources/labconfigs/${LAB_CONFIG}.json') as f:
+    x = json.loads(f.read())
+    try:
+        for k, v in x.get("$1").items():
+            print('%s:%s' % (k, v))
+    except:
+        pass
+EOF
+}
+
+function get_all_hosts () {
+python <<EOF
+import json
+with open('resources/labconfigs/${LAB_CONFIG}.json') as f:
+    x = json.loads(f.read())
+for i in x.values():
+    for k, v in i.items():
+      print('%s:%s' % (k, v))
+EOF
+}
+
+function check_for_pool () {
+  virsh pool-info storage
+  rc=$?
+  if ! [ ${rc} -eq 0 ]; then
+    virsh pool-define-as --name storage --type dir --target /var/lib/libvirt/images
+    virsh pool-autostart --pool storage
+    virsh pool-start --pool storage
+    virsh pool-refresh --pool storage
+  fi
+}
+
+# Create the VM root disk then define and start the VMs.
+#  !!!THIS TASK WILL DESTROY ALL OF THE ROOT DISKS IF THEY ALREADY EXIST!!!
+for node in $(get_all_hosts); do
+  # create node storage using backing image
+  check_for_pool
+  virsh pool-refresh --pool storage
+  if [ ${LAB_CONFIG} != 'kolla' ]; then
+    virsh vol-create-as storage ${node%%":"*} 256000M --backing-vol ${BACKING_FILE} --backing-vol-format qcow2 --format qcow2
+  else
+    virsh vol-create-as storage ${node%%":"*} 40960M --backing-vol ${BACKING_FILE} --backing-vol-format qcow2 --format qcow2
+  fi
+
+  #qemu-img create -f qcow2 -b ${BACKING_FILE} /var/lib/libvirt/images/${node%%":"*}.qcow2
+  # create node xml file
+  if [ ${LAB_CONFIG} != 'kolla' ]; then
+    cp resources/nodes/node.xml /etc/libvirt/qemu/${node%%":"*}.xml
+  else
+    cp resources/nodes/kolla.xml /etc/libvirt/qemu/${node%%":"*}.xml
+  fi
+  sed -i "s/__NODE__/${node%%":"*}/g" /etc/libvirt/qemu/${node%%":"*}.xml
+  # adjust ram and cpu if compute node
+  if [[ ${node%%":"*} =~ "compute" ]]; then
+    sed -i "s/__RAM__/16777216/g" /etc/libvirt/qemu/${node%%":"*}.xml
+    sed -i "s/__CPU__/16/" /etc/libvirt/qemu/${node%%":"*}.xml
+  else
+    sed -i "s/__RAM__/8388608/g" /etc/libvirt/qemu/${node%%":"*}.xml
+    sed -i "s/__CPU__/8/" /etc/libvirt/qemu/${node%%":"*}.xml
+  fi
+  # define node
+  virsh define /etc/libvirt/qemu/${node%%":"*}.xml || true
+
+  # Change to storage pool directory
+  pushd /var/lib/libvirt/images
+
+  # update /etc/hosts
+  # update /etc/network/interfaces
+  # update /etc/network/interfaces.d/node.cfg
+  # update /etc/hostname
+  if [ ${LAB_CONFIG} != 'kolla' ]; then
+    echo -e "Updating /etc/hosts on node: ${node%%":"*}\n"
+    echo -e "Updating /etc/network/interfaces of node: ${node%%":"*}\n"
+    echo -e "Updating /etc/network/interfaces.d/node.cfg of node: ${node%%":"*}\n"
+    echo -e "Updating hostname of node: ${node%%":"*}\n"
+    guestfish -d ${node%%":"*} -i <<EOG
+command "sed -i -e 's/nodebase/${node%%":"*}/g' -e 's/10.5.0.5/10.5.0.${node:(-3)}/' /etc/hosts"
+sh 'sed -i -e "s/nodebase/${node%%":"*}/g" -e "s/10.5.0.5/10.5.0.${node:(-3)}/" /etc/network/interfaces'
+sh 'sed -i -re "s/nodebase/${node%%":"*}/g" /etc/network/interfaces.d/node.cfg'
+sh 'sed -i -re "s/(([0-9]{1,3}[.]){3})(5)/\1${node:(-3)}/g" /etc/network/interfaces.d/node.cfg'
+sh 'echo ${node%%":"*} > /etc/hostname'
+EOG
+  else
+    echo -e "Updating /etc/hosts on node: ${node%%":"*}\n"
+    echo -e "Updating /etc/network/interfaces of node: ${node%%":"*}\n"
+    echo -e "Updating hostname of node: ${node%%":"*}\n"
+    guestfish -d ${node%%":"*} -i <<EOG
+command "sed -i -e 's/kabase/${node%%":"*}/g' -e 's/10.5.0.20/10.5.0.${node:8:2}/' /etc/hosts"
+sh 'sed -i -e "s/kabase/${node%%":"*}/g" -e "s/10.5.0.20/10.5.0.${node:8:2}/" /etc/network/interfaces'
+sh 'sed -i -e "s/kabase/${node%%":"*}/g" -e "s/10.5.0.21/10.5.0.${node:11:2}/" /etc/network/interfaces'
+sh 'sed -i -re "s/kabase/${node%%":"*}/g" /etc/network/interfaces'
+sh 'echo ${node%%":"*} > /etc/hostname'
+EOG
+  fi
+
+  popd
+done
+
+for node in $(get_host_type compute); do
+  echo -e "Creating and configuring nova logical volume for ${node%%":"*}"
+  guestfish -d ${node%%":"*} -i <<EOG
+lvcreate-free nova lxc 100
+mkfs ext3 /dev/lxc/nova
+mkdir-p /var/lib/nova
+mount /dev/lxc/nova /var/lib/nova
+write-append /etc/fstab '/dev/mapper/lxc-nova    /var/lib/nova    ext3    rw    0    0'
+EOG
+done
+
+for node in $(get_host_type storage); do
+  echo -e "Creating block storage block device for ${node%%":"*}"
+  virsh vol-create-as storage ${node%%":"*}-cv-disk 102400M --format qcow2 --prealloc-metadata
+  #qemu-img create -f raw /var/lib/libvirt/images/${node%%":"*}-cv-disk 102400M
+  #virsh attach-disk ${node%%":"*} --source /var/lib/libvirt/images/${node%%":"*}-cv-disk --target vdb --persistent
+done
+
+for node in $(get_host_type object); do
+  echo -e "Creating object storage block devices for ${node%%":"*}"
+  for disk in b c d e f; do
+    virsh vol-create-as storage ${node%%":"*}-ob-${disk} 20480M --format qcow2 --prealloc-metadata
+    #qemu-img create -f raw /var/lib/libvirt/images/${node%%":"*}-ob-${disk} 20480M
+    #virsh attach-disk ${node%%":"*} --source /var/lib/libvirt/images/${node%%":"*}-ob-${disk} --target vd${disk} --persistent
+  done
+done
+
+for node in $(get_host_type ceph); do
+  echo -e "Creating block storage block device for ${node%%":"*}"
+  for disk in b c d e f; do
+    virsh vol-create-as storage ${node%%":"*}-ceph-${disk} 40960M --format qcow2 --prealloc-metadata
+  done
+done
+
+# Check if infra01 exists, if not, skip infra01 specific tasks
+if [ ${LAB_CONFIG} != 'kolla' ]; then
+  virsh domstate infra01
+  rc=$?
+  if [ ${rc} -eq 0 ]; then
+    echo -e "Generating infra01 hosts file"
+    for node in $(get_all_hosts); do
+      echo -e "172.29.236.${node:(-3)}\t${node%%":"*}" >> /root/rpcops-onmetal-labconfigurator/hosts
+    done
+    echo -e "Adding hosts file to infra01"
+    virt-copy-in -d infra01 /root/rpcops-onmetal-labconfigurator/hosts /etc
+    rm -f /root/rpcops-onmetal-labconfigurator/hosts
+
+    echo -e "Adding jq helper library to infra01"
+    virt-copy-in -d infra01 /root/rpcops-onmetal-labconfigurator/resources/files/jq /usr/local/bin
+  fi
+else
+  echo -e "Generating kolla01 hosts file"
+  for node in $(get_all_hosts); do
+    echo -e "10.5.0.${node:8:2}\t${node%%":"*}" >> /root/rpcops-onmetal-labconfigurator/hosts
+  done
+  echo -e "Adding hosts file to kolla01"
+  virt-copy-in -d kolla01 /root/rpcops-onmetal-labconfigurator/hosts /etc
+  rm -f /root/rpcops-onmetal-labconfigurator/hosts
+
+  echo -e "Adding jq helper library to kolla01"
+  virt-copy-in -d kolla01 /root/rpcops-onmetal-labconfigurator/resources/files/jq /usr/local/bin
+fi
+
+echo -e "Configuration succeeded for lab: ${LAB_CONFIG}\n"
+echo -e "Login for all nodes user: root | password: stack\n"
+for node in $(get_all_hosts); do
+  if [ ${LAB_CONFIG} != 'kolla' ]; then
+    echo -e "Node Name: ${node%%":"*}\t\tDRAC IP: 172.29.236.${node:(-3)}\n"
+  else
+    echo -e "Node Name: ${node%%":"*}\t\tDRAC IP: 10.5.0.${node:8:2}\n"
+  fi
+done
+
+echo -e "Updating /etc/hosts with lab nodes\n"
+for node in $(get_all_hosts); do
+  if [ ${LAB_CONFIG} != 'kolla' ]; then
+    echo -e "172.29.236.${node:(-3)}\t${node%%":"*}" >> /etc/hosts
+  else
+    echo -e "10.5.0.${node:8:2}\t${node%%":"*}" >> /etc/hosts
+  fi
+done
+
+echo -e "Creating inventory file\n"
+for type in "${TYPES[@]}"; do
+  echo -e "[${type}]" >> /root/rpcops-onmetal-labconfigurator/inventory
+  for node in $(get_host_type ${type}); do
+    echo -e "${node%%":"*}" >> /root/rpcops-onmetal-labconfigurator/inventory
+  done
+  echo -e "\n"
+done
+
+echo -e "Clean known_hosts"
+: > /root/.ssh/known_hosts
+
+for node in $(get_host_type storage); do
+  echo -e "Attaching block storage block device for ${node%%":"*}"
+  virsh attach-disk --domain ${node%%":"*} --source /var/lib/libvirt/images/${node%%":"*}-cv-disk --target vdb --persistent --driver qemu --sourcetype file --subdriver qcow2
+done
+
+for node in $(get_host_type object); do
+  echo -e "Attaching object storage block devices for ${node%%":"*}"
+  for disk in b c d e f; do
+    virsh attach-disk --domain ${node%%":"*} --source /var/lib/libvirt/images/${node%%":"*}-ob-${disk} --target vd${disk} --persistent --driver qemu --sourcetype file --subdriver qcow2
+  done
+done
+
+for node in $(get_host_type ceph); do
+  echo -e "Attaching ceph storage block devices for ${node%%":"*}"
+  for disk in b c d e f; do
+    virsh attach-disk --domain ${node%%":"*} --source /var/lib/libvirt/images/${node%%":"*}-ceph-${disk} --target vd${disk} --persistent --driver qemu --sourcetype file --subdriver qcow2
+  done
+done
+
+echo -e "Create \"Mint Condition\" snapshots"
+for node in $(get_all_hosts); do
+  virsh snapshot-create-as --domain ${node%%":"*} --name ${node%%":"*}-mint --atomic --description 'Mint Condition'
+done
+
+echo -e "Starting lab nodes"
+for node in $(get_all_hosts); do
+# create node
+  echo -e "Creating and starting node: ${node%%":"*}\n"
+  virsh create /etc/libvirt/qemu/${node%%":"*}.xml
+done
+
+# Wait here for all nodes to be booted and ready with SSH
+wait_ssh
+
+echo -e "Storing lab configuration used"
+echo ${LAB_CONFIG} > /root/.labconfig

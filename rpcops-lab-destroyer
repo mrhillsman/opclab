@@ -1,0 +1,111 @@
+#!/bin/bash
+
+if [ -e "/root/.labconfig" ]; then
+  clear
+  echo -e "Lab found!"
+  sleep 3
+  for i in {10..1}
+  do
+    echo -e "Destroying your lab!"
+    echo -e "You have $i second(s) to abort"
+    sleep 1
+    clear
+  done
+else
+  echo -e "No labs currently running, please run rpcops-lab-setup"
+  exit 1
+fi
+
+# Woah there, not called destroyer for nothing...
+# Will do the following:
+# all nodes (VMs)
+# - delete virtual disk
+# - undefine node
+
+# Change to where instance disks are
+cd /var/lib/libvirt/images
+
+#TODO
+#set lab to destroy
+#better logic to remove containers from vpx
+#ask to destroy or revert, add revert logic
+
+# Set LAB_CONFIG [default for now]
+# if ! [ -z "$1" ]; then
+#   LAB_CONFIG=$1
+# else
+#   LAB_CONFIG='default'
+# fi
+
+LAB_CONFIG=`cat /root/.labconfig`
+
+function get_host_type () {
+python <<EOF
+import json
+with open('/root/rpcops-onmetal-labconfigurator/resources/labconfigs/${LAB_CONFIG}.json') as f:
+    x = json.loads(f.read())
+    try:
+        for k, v in x.get("$1").items():
+            print('%s:%s' % (k, v))
+    except:
+        pass
+EOF
+}
+
+# Check that empty-expect is installed and install if not
+dpkg --get-selections | grep empty
+rc=$?
+if ! [ $rc -eq 0 ]; then
+  apt-get install -y empty-expect
+fi
+
+# Get SSH key
+__SSHKEY__=$(cat /root/.ssh/id_rsa.pub|cut -d' ' -f1,2)
+
+# Detach all block devices
+echo -e "Detaching block devices\n"
+for node in $(get_host_type storage); do
+  echo -e "Detaching block storage block device for ${node%%":"*}"
+  virsh detach-disk ${node%%":"*} --target vdb --persistent
+done
+
+for node in $(get_host_type object); do
+  echo -e "Detaching object storage block devices for ${node%%":"*}"
+  for disk in {b..f}; do
+    virsh detach-disk ${node%%":"*} --target vd${disk} --persistent
+  done
+done
+
+# Remove any existing snapshots
+echo -e "Removing all snapshots"
+for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print }'`
+do
+  for j in `virsh snapshot-list --name $i`
+  do
+    virsh snapshot-delete --domain $i --snapshotname $j
+  done
+done
+
+# Force shutdown and remove all instances
+echo -e "Shutting down and undefining all instances"
+for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print }'`; do virsh destroy $i; done;
+for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print }'`; do virsh undefine $i; done;
+
+# Delete all disks
+echo -e "Removing all node block devices"
+for a in `virsh vol-list --pool storage|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print $1 }'`; do virsh vol-delete $a storage; done;
+
+# Remove instances from OnMetal /etc/hosts
+echo -e "Cleaning up /etc/hosts"
+sed -i '/.*\(infra\|network\|compute\|storage\|cinder\|ceph\|swift\|object\|logger\|kolla\).*/d' /etc/hosts
+echo -e "Cleaning up inventory\n"
+: > /root/rpcops-onmetal-labconfigurator/inventory
+echo -e "Cleaning arp cache"
+ip -s -s neigh flush all
+cd /root/rpcops-onmetal-labconfigurator
+echo -e "Removing lab configuration file"
+rm /root/.labconfig
+
+for i in `seq 1 7`; do
+  echo -e "LAB DEMOLISHED!!! HULK SMASH!!!"
+done

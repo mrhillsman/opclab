@@ -1,0 +1,40 @@
+---
+
+- name: "Destroy Lab Machines"
+  hosts: all
+  remote_user: root
+  gather_facts: false
+
+  vars:
+    libvirt_host: "qemu+ssh://{{ ansible_ssh_host }}/system?socket=/var/run/libvirt/libvirt-sock"
+
+  tasks:
+    - name: "Register all VMs"
+      virt:
+        command: list_vms
+        uri: "{{ libvirt_host }}"
+      register: vms
+
+    - name: "Stop all VMs"
+      virt:
+        name: "{{ item }}"
+        state: destroyed
+        uri:  "{{ libvirt_host }}"
+      when: item != "loadbalancer" and item != "firewall"
+      with_items: "{{ vms.list_vms }}"
+
+    - name: "Remove all snapshots"
+      shell: "for i in `virsh list --all --name|awk '/infra|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print }'`; \
+      do for j in `virsh snapshot-list --name $i`; do virsh snapshot-delete --domain $i --snapshotname $j; done; done"
+
+    - name: "Remove all VMs"
+      virt:
+        name: "{{ item }}"
+        command: undefine
+        uri: "{{ libvirt_host }}"
+      when: item != "loadbalancer" and item != "firewall"
+      with_items: "{{ vms.list_vms }}"
+
+    - name: "Remove all storage devices"
+      shell: "for a in `virsh vol-list --pool storage|awk '/infra|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print $1 }'`; \
+      do virsh vol-delete $a storage; done;"

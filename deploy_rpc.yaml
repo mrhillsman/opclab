@@ -1,0 +1,98 @@
+---
+
+- name: "Deploy RPC OpenStack"
+  become: yes
+  remote_user: root
+  host: "{{ deploy_host | default('infra01') }}"
+
+  tasks:
+    - name: Get Repo
+      git:
+        repo: http://github.com/rcbops/rpc-openstack
+        clone: yes
+        dest: /opt/rpc-openstack
+        recursive: yes
+        version: "{{ rpc_release | default('r12.1.4') }}"
+
+    - name: Remove existing openstack_deploy
+      command: rm -rf openstack_deploy
+      args:
+        chdir: /etc
+
+    - name: Copy openstack_deploy to etc
+      command: cp -R openstack-ansible/etc/openstack_deploy /etc/openstack_deploy
+      args:
+        chdir: /opt/rpc-openstack
+
+    - name: Create user_secrets
+      command: python openstack-ansible/scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
+      args:
+        chdir: /opt/rpc-openstack
+
+    - name: Merge user_variables
+      command: python scripts/update-yaml.py \
+      /etc/openstack_deploy/user_variables.yml rpcd/etc/openstack_deploy/user_variables.yml
+      args:
+        chdir: /opt/rpc-openstack
+
+    - name: Copy extras configuration files
+      command: cp rpcd/etc/openstack_deploy/user_extras_*.yml /etc/openstack_deploy
+      args:
+        chdir: /opt/rpc-openstack
+
+    - name: Copy env.d configuration files
+      command: cp rpcd/etc/openstack_deploy/env.d/* /etc/openstack_deploy/env.d
+      args:
+        chdir: /opt/rpc-openstack
+
+    - name: Persist admin password
+      lineinfile:
+        dest: /etc/openstack_deploy/user_secrets.yml
+        regexp: "^keystone_auth_admin_password.*"
+        state: present
+        line: "keystone_auth_admin_password: openstack"
+
+    - name: Configure image service
+      lineinfile:
+        dest: /etc/openstack_deploy/user_variables.yml
+        insertafter: "^#glance_default_store"
+        state: present
+        line: "glance_default_store: swift"
+
+    - name: Configure cinder AZ
+      lineinfile:
+        dest: /etc/openstack_deploy/user_variables.yml
+        insertafter: EOF
+        state: present
+        line: "cinder_default_availability_zone: cinderAZ_1"
+
+    - name: Copy openstack_user_config.yml
+      copy:
+        src: playbooks/templates/openstack_user_config.yml
+        dest: /etc/openstack_deploy/openstack_user_config.yml
+        owner: root
+        group: root
+        mode: 0600
+
+    - name: Copy swift.yml
+      copy:
+        src: playbooks/templates/swift.yml
+        dest: /etc/openstack_deploy/conf.d/swift.yml
+        owner: root
+        group: root
+        mode: 0600
+
+    - name: Build openstack-ansible inventory
+      command: python /opt/rpc-openstack/openstack-ansible/playbooks/inventory/dynamic_inventory.py
+
+    - name: Wait for inventory to build
+      pause: seconds=5
+
+    - name: Enable VPX login
+      script: playbooks/scripts/vpx-login-setup.sh
+
+    - name: Add containers to VPX
+      shell: |
+        ssh nsroot@10.5.0.4 <<EOF
+        `bash /root/rpcops-onmetal-labconfigurator/resources/files/vpx-configurator`
+        EOF

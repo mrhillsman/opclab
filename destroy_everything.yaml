@@ -1,0 +1,4 @@
+---
+
+- include: destroy_virtual_resources.yaml
+- include: destroy_onmetal.yaml

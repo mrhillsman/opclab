@@ -1,0 +1,39 @@
+---
+
+- name: Prepare OnMetal Host
+  hosts: all
+  remote_user: root
+  gather_facts: false
+  tasks:
+    - name: "Check port 22 is open"
+      local_action:
+        module: wait_for
+        host: "{{ ansible_ssh_host }}"
+        port: 22
+        state: started
+      become: false
+
+    - name: "Give SSH some time"
+      pause: seconds=60
+
+    - name: "Update apt cache"
+      command: apt-get update
+      
+    - name: "Install needed package(s)"
+      apt:
+        name: git
+        state: latest
+
+    - name: "Check for existing repo"
+      stat: path=/root/rpcops-onmetal-labconfigurator
+      register: repostatus
+
+    - name: "Clone Github Repository"
+      git:
+        repo: http://github.com/mrhillsman/rpcops-onmetal-labconfigurator
+        accept_hostkey: yes
+        clone: yes
+        dest: /root/rpcops-onmetal-labconfigurator
+        recursive: yes
+        version: master
+      when: repostatus.stat.exists == False

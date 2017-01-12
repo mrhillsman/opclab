@@ -1,0 +1,73 @@
+---
+
+- name: "Run openstack-ansible Deployment"
+  become: yes
+  remote_user: root
+  hosts: all
+
+  tasks:
+    - name: "OpenStack Hosts Setup"
+      script: playbooks/scripts/01-openstack-hosts-setup
+
+    - name: "Security Hardening"
+      script: playbooks/scripts/02-security-hardening
+
+    - name: "LXC Hosts Setup"
+      script: playbooks/scripts/03-lxc-hosts-setup
+
+    - name: "LXC Containers Create"
+      script: playbooks/scripts/04-lxc-containers-create
+
+    - name: "HAProxy Install"
+      script: playbooks/scripts/05-haproxy-install
+
+    - name: "Memcached Install"
+      script: playbooks/scripts/06-memcached-install
+
+    - name: "Repo Install"
+      script: playbooks/scripts/07-repo-install
+
+    - name: "Galera Install"
+      script: playbooks/scripts/08-galera-install
+
+    - name: "RabbitMQ Install"
+      script: playbooks/scripts/09-rabbitmq-install
+
+    - name: "Utility Install"
+      script: playbooks/scripts/10-utility-install
+
+    - name: "rsyslog Install"
+      script: playbooks/scripts/11-rsyslog-install
+
+    - name: "OS Keystone Install"
+      script: playbooks/scripts/12-os-keystone-install
+
+    - name: "OS Glance Install"
+      script: playbooks/scripts/13-os-glance-install
+
+    - name: "OS Cinder Install"
+      script: playbooks/scripts/14-os-cinder-install
+
+    - name: "OS Nova Install"
+      script: playbooks/scripts/15-os-nova-install
+
+    - name: "OS Neutron Install"
+      script: playbooks/scripts/16-os-neutron-install
+
+    - name: "OS Heat Install"
+      script: playbooks/scripts/17-os-heat-install
+
+    - name: "OS Horizon Install"
+      script: playbooks/scripts/18-os-horizon-install
+
+    - name: "OS Ceilometer Install"
+      script: playbooks/scripts/19-os-ceilometer-install
+
+    - name: "OS Aodh Install"
+      script: playbooks/scripts/20-os-aodh-install
+
+    - name: "OS Swift Install"
+      script: playbooks/scripts/21-os-swift-install
+
+    - name: "OS Ironic Install"
+      script: playbooks/scripts/22-os-ironic-install

@@ -1,0 +1,224 @@
+#!/usr/bin/env python
+
+import os.path
+import sys
+import argparse
+import subprocess
+import libvirt
+import guestfs
+
+if not os.path.exists('/root/.labconfig'):
+    sys.exit('Existing lab required to run this script.')
+
+
+parser = argparse.ArgumentParser(description='Setup individual lab resources', version='1.0')
+parser.add_argument('-n', '--name', action='store', dest='node_name', type=str,
+                    help='Name of the node, ex. ceph01')
+parser.add_argument('-t', '--type', action='store', dest='node_type', type=str,
+                    choices=('infra', 'logging', 'compute', 'storage', 'object', 'ceph'),
+                    help='Type of node [infra|logging|compute|storage|object|ceph]')
+parser.add_argument('-a', '--address', action='store', dest='node_address', type=str,
+                    help='IP address to use; last octet, ex. 170')
+parser.add_argument('-r', '--ram', action='store', dest='ram', type=int,
+                    help='(Unavailable) RAM to allocate to node')
+parser.add_argument('-p', '--cpu', action='store', dest='cpu', type=int,
+                    help='(Unavailable) Number of vCPUs to allocate to node')
+parser.add_argument('-b', '--basexml', action='store', dest='base_volume_xml', type=str,
+                    help='(Unavailable) Description of base volume; https://libvirt.org/formatstorage.html#StorageVol')
+parser.add_argument('-s', '--basesize', action='store', dest='base_volume_size', type=int,
+                    help='(Unavailable) Size of the base volume')
+parser.add_argument('-i', '--image', action='store', dest='backing_image', type=str,
+                    help='(Unavailable) Full path to the image to use as backing image for base volume')
+parser.add_argument('-e', '--extraxml', action='store', dest='extra_volume_xml', type=str,
+                    help='(Unavailable) XML description for additional volume(s); '
+                         'https://libvirt.org/formatstorage.html#StorageVol')
+parser.add_argument('-c', '--extracount', action='store', dest='extra_volume_count', type=int,
+                    help='(Unavailable) Number of extra volumes to create')
+parser.add_argument('-z', '--extrasize', action='store', dest='extra_volume_size', type=str,
+                    help='(Unavailable) Size of extra volume(s)')
+
+# this could very well evolve into simply an extra resource creation script
+# changed description to reflect this thought with v1.0 focusing on add'l node creation
+# need to check if ip address is already used
+# create classes that this calls vs all here
+
+if len(sys.argv) <= 1:
+    parser.print_help()
+    sys.exit(1)
+else:
+    args = parser.parse_args()
+
+
+node_name = args.node_name
+node_type = args.node_type
+node_address = args.node_address
+set_ram = (args.ram * 1024 * 1024)
+set_cpu = args.cpu
+repo_directory = '/root/rpcops-onmetal-labconfigurator/'
+connection = libvirt.open('qemu:///system')
+storage_pool = connection.storagePoolLookupByName('storage')
+backing_image = '/var/lib/libvirt/images/nodebase.qcow2'
+default_xml = '/etc/libvirt/qemu/{}.xml'.format(node_name)
+volume_types = ['infra', 'logging', 'compute', 'storage', 'object', 'ceph']
+storage_types = ['storage', 'object', 'ceph']
+default_ram = '8388608'
+default_cpu = '8'
+compute_ram = '16777216'
+compute_cpu = '16'
+base_volume_size = '256000'
+extra_volume_count = 5
+extra_volume_size = '20480'
+extra_volume_letter = 'b'
+
+if node_type == 'storage':
+    extra_volume_count = 1
+    extra_volume_size = '102400'
+
+
+base_volume_xml = "<volume type='file'>\n \
+  <name>{0}</name>\n \
+  <capacity unit='M'>{1}</capacity>\n \
+  <target>\n \
+    <format type='qcow2'/>\n \
+    <permissions>\n \
+      <owner>106</owner>\n \
+      <group>109</group>\n \
+    </permissions>\n \
+  </target>\n \
+  <backingStore>\n \
+    <path>{2}</path>\n \
+    <format type='qcow2'/>\n \
+  </backingStore>\n \
+</volume>\n"
+
+extra_volume_xml = "<volume type='file'>\n \
+  <name>{0}</name>\n \
+  <capacity unit='M'>{1}</capacity>\n \
+  <target>\n \
+    <format type='qcow2'/>\n \
+    <permissions>\n \
+      <owner>106</owner>\n \
+      <group>109</group>\n \
+    </permissions>\n \
+  </target>\n \
+</volume>\n"
+
+extra_volume_attach_xml = "<disk type='file' device='disk'>\n \
+  <driver name='qemu' type='qcow2'/>\n \
+    <source file='/var/lib/libvirt/images/{0}'/>\n \
+    <target dev='vd{1}' bus='virtio'/>\n \
+</disk>\n"
+
+
+def copy_base_node_xml_template():
+    base_node_xml_file = repo_directory + 'resources/nodes/node.xml'
+    new_node_xml_file = default_xml
+    command = 'cp {0} {1}'.format(base_node_xml_file, new_node_xml_file)
+    proc = subprocess.Popen(command, shell=True)
+    proc.wait()
+
+
+def update_node_xml_template(node, set_type, ram, cpu):
+    if set_type == 'compute' and ram == default_ram and cpu == default_cpu:
+        ram = compute_ram
+        cpu = compute_cpu
+
+    with open(default_xml, 'r') as f:
+        xml = f.read()
+        xml = xml.replace('__NODE__', node)
+        xml = xml.replace('__RAM__', ram)
+        xml = xml.replace('__CPU__', cpu)
+
+    with open(default_xml, 'w') as f:
+        f.write(xml)
+
+
+def update_node_image(node, address):
+    node_image = guestfs.GuestFS(python_return_dict=True)
+    node_image.add_domain(node)
+    node_image.launch()
+    node_image.mount('/dev/lxc/root', '/')
+    node_image.command(['sed', '-i', '-e', 's/nodebase/{}/g'.format(node),
+                        '-e', 's/10.5.0.5/10.5.0.{}/'.format(address), '/etc/hosts'])
+    node_image.command(['sed', '-i', '-e', 's/nodebase/{}/g'.format(node),
+                        '-e', 's/10.5.0.5/10.5.0.{}/'.format(address), '/etc/network/interfaces'])
+    node_image.command(['sed', '-i', '-re', 's/nodebase/{}/g'.format(node), '/etc/network/interfaces.d/node.cfg'])
+    node_image.command(['sed', '-i', '-re', 's/(([0-9]{{1,3}}[.]){{3}})(5)/\\1{}/g'.format(address),
+                        '/etc/network/interfaces.d/node.cfg'])
+    node_image.sh('echo {} > /etc/hostname'.format(node))
+    node_image.close()
+
+
+def update_compute_image(node):
+    compute_image = guestfs.GuestFS(python_return_dict=True)
+    compute_image.add_domain(node)
+    compute_image.launch()
+    compute_image.mount('/dev/lxc/root', '/')
+    compute_image.lvcreate_free('nova', 'lxc', 100)
+    compute_image.mkfs('ext3', '/dev/lxc/nova')
+    compute_image.mkdir_p('/var/lib/nova')
+    compute_image.mount('/dev/lxc/nova', '/var/lib/nova')
+    compute_image.write_append('/etc/fstab', '/dev/mapper/lxc-nova    /var/lib/nova    ext3    rw    0    0')
+    compute_image.close()
+
+
+def create_node_base_volume(node, volume_xml, volume_size):
+    storage_pool.createXML(volume_xml.format(node, volume_size, backing_image))
+
+
+def create_node_extra_volume(node, set_type, volume_xml, volume_count, volume_size, volume_letter, volume_attach_xml):
+    if volume_count == 1:
+        extra_volume_name = node + '-' + set_type[:2] + '-' + volume_letter
+        storage_pool.createXML(volume_xml.format(extra_volume_name, volume_size), 1)
+        connection.lookupByName(node).attachDeviceFlags(volume_attach_xml.format(extra_volume_name, volume_letter),
+                                                        2)
+    else:
+        while volume_count != 0:
+            extra_volume_name = node + '-' + set_type[:2] + '-' + chr(volume_count + 97)
+            volume_letter = chr(volume_count + 97)
+            storage_pool.createXML(volume_xml.format(extra_volume_name, volume_size), 1)
+            connection.lookupByName(node).attachDeviceFlags(volume_attach_xml.format(extra_volume_name, volume_letter),
+                                                            2)
+            volume_count -= 1
+
+
+def define_node(xml_file):
+    with open(xml_file, 'r') as defined_xml:
+        defined_node = defined_xml.read()
+        connection.defineXML(defined_node)
+
+
+def start_node(node):
+    connection.lookupByName(node).create()
+
+
+def create_node(node, set_type, address):
+    create_node_base_volume(node, base_volume_xml, base_volume_size)
+    copy_base_node_xml_template()
+    update_node_xml_template(node, set_type, default_ram, default_cpu)
+    define_node(default_xml)
+    update_node_image(node, address)
+
+    if set_type == 'compute':
+        update_compute_image(node)
+
+    if set_type in storage_types:
+        create_node_extra_volume(node, set_type, extra_volume_xml, extra_volume_count,
+                                 extra_volume_size, extra_volume_letter, extra_volume_attach_xml)
+
+    start_node(node)
+
+
+def add_node_to_host_etc_hosts(node, address):
+    with open('/etc/hosts', 'a') as f:
+        line_to_add = "172.29.236.{0}\t{1}".format(address, node)
+        f.write(line_to_add)
+
+
+# print 'Creating primary data disk for node: {}'.format(node_name)
+# print 'Creating XML definition for node: {}'.format(node_name)
+# check if infra01 is defined, if defined check that it is running, if running, check for ssh login
+# allow letter to start extra volume(s) at, default is b
+create_node(node_name, node_type, node_address)
+add_node_to_host_etc_hosts(node_name, node_address)
+connection.close()

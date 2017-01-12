@@ -1,0 +1,395 @@
+#!/bin/bash
+
+# Just in case the README.md warning was not adhered to check here
+if ! [ `awk '/processor/ { count++ } END { print count }' /proc/cpuinfo` -eq 40 ]; then
+  if [ -f /root/.cpufixed ]; then
+    echo -e "You have another problem other than acpi.\n"
+    echo -e "Investigate or you can continue at your own risk.\n"
+    read -p "Continue [y/n]: " __UNDER40__
+    if [ $__UNDER40__ == "n" ]; then
+      exit 200
+    fi
+  fi
+  if ! [ -f /acpi-fixed ]; then
+    echo -e "No bueno! acpi=off or another issue.\n"
+    echo -e "Fixing acpi=off. If this does not work, investigate further.\n"
+    sed -i.bak 's/acpi=off/acpi=noirq/' /etc/default/grub
+    grub-mkconfig -o /boot/grub/grub.cfg
+    update-grub
+    touch /root/.cpufixed
+    shutdown -r now "REBOOTING YOUR SYSTEM. RE-RUN SCRIPT WHEN LOGGED BACK IN."
+  fi
+else
+  echo -e "Good to go! acpi=noirq or bug irrelevant.\n"
+  sleep 3
+fi
+
+echo -e "This script is about to bootstrap your system for RPCOPS Lab Configuration\n"
+echo -e "If you want to abort this process...you have 15s\n"
+sleep 5
+clear
+
+for i in {10..1}
+do
+  echo -e "Starting in $i"
+  sleep 1
+  clear
+done
+
+# Move to the root directory as starting point
+cd /root/rpcops-onmetal-labconfigurator
+
+# Get onmetal host bond0.XXX
+__HOST_BOND_INT__=( `ip link list|grep -oP "(?<=\ )bond0\.[0-9]{3}(?=@bond0)"` )
+
+# Get onmetal host bond0.XXX address [public]
+__HOST_IP__=`ip addr show dev "${__HOST_BOND_INT__[0]}"|awk '/inet/ { split($2, ip, "/"); print ip[1]; exit }'`
+
+# Enable nested KVM
+# echo 'options kvm_intel nested=1' >> /etc/modprobe.d/qemu-system-x86.conf
+
+# If you were running ssh-agent with forwarding this will clear out the keys
+#  in your cache which can cause confusion.
+killall ssh-agent; eval `ssh-agent`
+
+if [ ! -f "/root/.ssh/id_rsa" ];then
+  echo -e "\n" | ssh-keygen -t rsa -N ''
+fi
+
+cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+
+# Disable StrictHostKeyChecking in SSH since VMs will change this when rebuilt
+echo -e "    StrictHostKeyChecking no" >> /etc/ssh/ssh_config
+
+# Upgrade repository data and install required packages
+apt-get update
+
+# Ensure debconf utilities are installed
+apt-get install -y debconf-utils nfs-common
+
+# Set debconf answers
+echo 'iptables-persistent iptables-persistent/autosave_v6 boolean false' | debconf-set-selections
+echo 'iptables-persistent iptables-persistent/autosave_v4 boolean false' | debconf-set-selections
+echo 'libguestfs-tools libguestfs/update-appliance boolean true' | debconf-set-selections
+
+# Mount the RPC Labs NFS share
+# TODO granted, the host needs to be in IAD for this
+# setting up the repo will alleviate region specific issue
+# however will also introduce some delay and bandwidth usage
+# being that files are not in dc available via servicenet
+mkdir /labshare
+
+# Check if DFW or IAD share is accessible
+time bash -c 'showmount -e 10.208.163.227 & sleep 5; kill -INT %+'
+RC=$?
+if [ $RC -eq 0 ]; then
+  mount 10.209.128.54:/mnt/builder /labshare
+else
+  mount 10.208.163.227:/mnt/builder /labshare
+fi
+
+# Setup latest version of supermin (5.1.15)
+apt-get build-dep -y supermin
+cp /labshare/supermin.tar.gz /root/
+pushd /root
+tar xzf supermin.tar.gz
+pushd supermin
+make install
+popd
+popd
+
+source /root/.bashrc
+
+# Setup latest version of libguestfs and libguestfs-tools (1.32.4)
+apt-get build-dep -y libguestfs
+cp /labshare/libguestfs.tar.gz /root/
+pushd /root
+tar xzf libguestfs.tar.gz
+pushd libguestfs
+make install REALLY_INSTALL=yes
+ldconfig
+popd
+popd
+
+# Install identified necessary host packages (this can be adjusted as needed)
+apt-get install -y qemu tcpdump libvirt-bin libvirt-dev lvm2 git git-core curl \
+zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 \
+libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev python-dev \
+python curl vim telnet zip unzip python-libvirt tmux iptables-persistent \
+ebtables pm-utils dsh expect empty-expect screen ntp libpq-dev
+
+pushd /usr/local/bin
+wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
+mv jq-linux64 jq
+chmod +x jq
+popd
+
+# Remove all iptables rules
+/etc/init.d/iptables-persistent flush
+
+# Ensure ip forwarding is enabled on host
+grep -oP -m1 "^#net.ipv4.ip_forward" /etc/sysctl.conf
+if [ `echo $?` -eq 0 ]; then
+  sed -i 's/^#net.ipv4.ip_forward.*/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+else
+  sysctl -w net.ipv4.ip_forward=1 | tee -a /etc/sysctl.conf
+fi
+sysctl -p /etc/sysctl.conf
+
+# Opinionated tmux configuration setup
+# Change default prefix to C-a
+cat > /root/.tmux.conf <<EOF
+# Set the prefix to ^a.
+unbind C-b
+set -g prefix ^a
+bind a send-prefix
+
+##########################
+# Session Initialization #
+##########################
+
+#################
+# Mouse Support #
+#################
+#setw -g mode-mouse on
+#set -g mouse-select-pane on
+#set -g mouse-resize-pane on
+#set -g mouse-select-window on
+
+##############
+# Status Bar #
+###############
+
+set-option -g status-utf8 on
+set-option -g status-justify right
+set-option -g status-bg black # colour213 # pink
+set-option -g status-fg cyan
+# set-option -g status-interval 5
+set-option -g status-left-length 30
+set-option -g status-left '#[fg=magenta]» #[fg=blue,bold]#T#[default]'
+set-option -g status-right '#[fg=red,bold][[ #(git branch) branch   ]] #[fg=cyan]»» #[fg=blue,bold]###S #[fg=magenta]%R %m-%d#(acpi | cut -d ',' -f 2)#[default]'
+set-option -g visual-activity on
+
+# Add titles to status bar
+set-option -g set-titles on
+set-option -g set-titles-string '#H:#S.#I.#P #W #T'
+EOF
+
+# Install pip and a few helper packages
+python <(curl -sk https://bootstrap.pypa.io/get-pip.py)
+pip install -U pyopenssl ndg-httpsclient pyasn1 bpython httpie netaddr ansible lxml
+
+# Install Open vSwitch
+pushd ovs
+dpkg -i openvswitch-common_2.6.90-1_amd64.deb openvswitch-switch_2.6.90-1_amd64.deb python-openvswitch_2.6.90-1_all.deb
+apt-get -f install
+popd
+
+function get_host_disks() {
+python <<EOF
+from subprocess import Popen, PIPE
+lsblk = Popen(['lsblk', '-lnd'], stdout=PIPE)
+disks = lsblk.communicate()[0].strip()
+lsblk.wait()
+
+drives = []
+
+disks = disks.split("\n")
+
+for disk in disks:
+    drive = disk.strip().split(" ")[0]
+    drives.append(drive)
+
+print ' '.join(drives[-2:])
+EOF
+}
+
+# Setup additional drives as storage pools
+HOST_DISKS=( $(get_host_disks) )
+__DRIVES__="/dev/${HOST_DISKS[0]} /dev/${HOST_DISKS[1]}"
+for i in $__DRIVES__
+do
+  echo -e "n\np\n\n\n\nw\n"|fdisk $i
+  pvcreate ${i}1
+done
+
+# Create storage pool volume group
+vgcreate storage /dev/${HOST_DISKS[0]}1 /dev/${HOST_DISKS[1]}1
+
+# Create storage pool logical volume
+lvcreate -l 100%FREE -n images storage
+
+# Create storage pool filesystem and mount
+mkfs.ext4 -O ^has_journal /dev/storage/images
+mount /dev/storage/images /var/lib/libvirt/images
+tail -n2 /etc/mtab >> /etc/fstab
+
+# Create storage pool via virsh
+virsh pool-define-as --name storage --type dir --target /var/lib/libvirt/images
+virsh pool-autostart --pool storage
+virsh pool-start --pool storage
+virsh pool-refresh --pool storage
+
+
+# Add necessary Open vSwitch virtual switches
+ovs-vsctl add-br lbsrvsw
+
+# Remove default libvirt network
+virsh net-destroy default
+virsh net-undefine default
+
+# Create libvirt networks
+echo -e "Building virtual network infrastructure\n"
+pushd resources/networks
+
+# Dynamically generate networks that depend on host bond interfaces
+cat << EON > rpcops-drac00-net.xml
+<network>
+  <name>drac00</name>
+  <forward dev='${__HOST_BOND_INT__[0]}' mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+    <interface dev='${__HOST_BOND_INT__[0]}'/>
+  </forward>
+  <bridge name='virbr2' stp='off' delay='0'/>
+  <domain name='drac00'/>
+  <ip address='10.5.0.1' netmask='255.255.255.0'>
+  </ip>
+</network>
+EON
+
+cat << EON > rpcops-public00-net.xml
+<network>
+  <name>public00</name>
+  <forward dev='${__HOST_BOND_INT__[0]}' mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+    <interface dev='${__HOST_BOND_INT__[0]}'/>
+  </forward>
+  <bridge name='virbr0' stp='off' delay='0'/>
+  <domain name='public00'/>
+  <ip address='192.168.0.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.239.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.240.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.241.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.242.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.243.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.244.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.245.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.246.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.247.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.248.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.249.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.250.1' netmask='255.255.255.0'>
+  </ip>
+</network>
+EON
+
+cat << EON > rpcops-snet00-net.xml
+<network>
+  <name>snet00</name>
+  <forward dev='${__HOST_BOND_INT__[1]}' mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+    <interface dev='${__HOST_BOND_INT__[1]}'/>
+  </forward>
+  <bridge name='virbr1' stp='off' delay='0'/>
+  <domain name='snet00'/>
+  <ip address='10.6.0.1' netmask='255.255.255.0'>
+  </ip>
+</network>
+EON
+
+for i in rpcops-*-net.xml
+do
+  virsh net-define $i
+done
+
+for i in `python -c 'import libvirt; conn=libvirt.open("qemu:///system"); print " ".join(conn.listDefinedNetworks())'`
+do
+  virsh net-autostart $i
+  virsh net-start $i
+done
+popd
+
+# Create firewall libvirt VM
+pushd resources/edgedevices
+clear
+echo -e "Copying edge device disk image\n"
+cp /labshare/templates/edgedevices/firewall.qcow2 /var/lib/libvirt/images
+echo -e "Defining and starting edge devices\n"
+virsh define firewall.xml
+popd
+
+# Start firewall
+virsh start firewall
+sleep 10
+
+# Copy backing image from NFS share
+pushd /var/lib/libvirt/images
+echo -e "Copying default backing image\n"
+cp /labshare/templates/nodes/nodebase.tar.gz /var/lib/libvirt/images
+echo -e "Extracting default backing image\n "
+tar xzf nodebase.tar.gz
+if [ -f /labshare/templates/nodes/kabase.tar.gz ]; then
+  echo -e "Copying kolla backing image\n"
+  cp /labshare/templates/nodes/kabase.tar.gz /var/lib/libvirt/images
+  echo -e "Extracting kolla backing image\n "
+  tar xzf kabase.tar.gz
+fi
+popd
+
+# Add routing for OpenStack
+echo -e "Adding ip link to OpenStack environment"
+ip link add name ext-lbsrvsw type veth peer name int-lbsrvsw
+ovs-vsctl add-port lbsrvsw int-lbsrvsw
+ovs-vsctl set Port int-lbsrvsw tag=202
+ip link set dev int-lbsrvsw up
+ip link set dev ext-lbsrvsw up
+ip addr add 172.29.236.90/22 dev ext-lbsrvsw
+
+echo -e "Setting TZ to UTC"
+unlink /etc/localtime
+ln -s /usr/share/zoneinfo/UTC /etc/localtime
+timedatectl set-timezone UTC
+
+echo -e "Updating ntp to serve only local guests"
+rm /etc/ntp.conf
+cp /root/rpcops-onmetal-labconfigurator/resources/files/host-ntp.conf /etc/ntp.conf
+service ntp restart
+
+echo -e "Adding host SSH key to base images"
+SSHKEY=$(cat /root/.ssh/id_rsa.pub|cut -d' ' -f1,2)
+
+if [ -f /var/lib/libvirt/images/nodebase.qcow2 ]; then
+  guestfish -a /var/lib/libvirt/images/nodebase.qcow2 -i <<EOG
+sh "echo ${SSHKEY} >> /root/.ssh/authorized_keys"
+EOG
+fi
+if [ -f /var/lib/libvirt/images/kabase.qcow2 ]; then
+  guestfish -a /var/lib/libvirt/images/kabase.qcow2 -i <<EOG
+sh "echo ${SSHKEY} >> /root/.ssh/authorized_keys"
+EOG
+fi
+
+virsh pool-refresh --pool storage
+
+# Notify end of setup
+touch /root/.hostsetup
+echo -e "Your host machine has been bootstrapped for the lab successfully.\n"
+echo -e "Proceed to run rpcops-lab-setup"
