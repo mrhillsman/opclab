@@ -12,7 +12,7 @@ if [ -e "/root/.labconfig" ]; then
     clear
   done
 else
-  echo -e "No labs currently running, please run rpcops-lab-setup"
+  echo -e "No labs currently running, please run opc-lab-setup"
   exit 1
 fi
 
@@ -42,7 +42,7 @@ LAB_CONFIG=`cat /root/.labconfig`
 function get_host_type () {
 python <<EOF
 import json
-with open('/root/rpcops-onmetal-labconfigurator/resources/labconfigs/${LAB_CONFIG}.json') as f:
+with open('/root/opclab/resources/labconfigs/${LAB_CONFIG}.json') as f:
     x = json.loads(f.read())
     try:
         for k, v in x.get("$1").items():
@@ -99,10 +99,10 @@ for a in `virsh vol-list --pool storage|awk '/infra|network|compute|storage|cind
 echo -e "Cleaning up /etc/hosts"
 sed -i '/.*\(infra\|network\|compute\|storage\|cinder\|ceph\|swift\|object\|logger\|kolla\).*/d' /etc/hosts
 echo -e "Cleaning up inventory\n"
-: > /root/rpcops-onmetal-labconfigurator/inventory
+: > /root/opclab/inventory
 echo -e "Cleaning arp cache"
 ip -s -s neigh flush all
-cd /root/rpcops-onmetal-labconfigurator
+cd /root/opclab
 echo -e "Removing lab configuration file"
 rm /root/.labconfig
 

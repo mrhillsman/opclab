@@ -13,7 +13,7 @@ fi
 
 # $1 will be the lab configuration requested
 # if not set, will use default
-# ex. bash rpcops-lab-setup cephonly
+# ex. bash opc-lab-setup cephonly
 
 # Get all defined lab configurations
 # LABS=( `ls -1 resources/labconfigs/` )
@@ -34,7 +34,7 @@ fi
 # fi
 
 # Move to the root directory as starting point
-cd /root/rpcops-onmetal-labconfigurator
+cd /root/opclab
 
 # Set LAB_CONFIG [default for now]
 if ! [ -z "$1" ]; then
@@ -216,26 +216,26 @@ if [ ${LAB_CONFIG} != 'kolla' ]; then
   if [ ${rc} -eq 0 ]; then
     echo -e "Generating infra01 hosts file"
     for node in $(get_all_hosts); do
-      echo -e "172.29.236.${node:(-3)}\t${node%%":"*}" >> /root/rpcops-onmetal-labconfigurator/hosts
+      echo -e "172.29.236.${node:(-3)}\t${node%%":"*}" >> /root/opclab/hosts
     done
     echo -e "Adding hosts file to infra01"
-    virt-copy-in -d infra01 /root/rpcops-onmetal-labconfigurator/hosts /etc
-    rm -f /root/rpcops-onmetal-labconfigurator/hosts
+    virt-copy-in -d infra01 /root/opclab/hosts /etc
+    rm -f /root/opclab/hosts
 
     echo -e "Adding jq helper library to infra01"
-    virt-copy-in -d infra01 /root/rpcops-onmetal-labconfigurator/resources/files/jq /usr/local/bin
+    virt-copy-in -d infra01 /root/opclab/resources/files/jq /usr/local/bin
   fi
 else
   echo -e "Generating kolla01 hosts file"
   for node in $(get_all_hosts); do
-    echo -e "10.5.0.${node:8:2}\t${node%%":"*}" >> /root/rpcops-onmetal-labconfigurator/hosts
+    echo -e "10.5.0.${node:8:2}\t${node%%":"*}" >> /root/opclab/hosts
   done
   echo -e "Adding hosts file to kolla01"
-  virt-copy-in -d kolla01 /root/rpcops-onmetal-labconfigurator/hosts /etc
-  rm -f /root/rpcops-onmetal-labconfigurator/hosts
+  virt-copy-in -d kolla01 /root/opclab/hosts /etc
+  rm -f /root/opclab/hosts
 
   echo -e "Adding jq helper library to kolla01"
-  virt-copy-in -d kolla01 /root/rpcops-onmetal-labconfigurator/resources/files/jq /usr/local/bin
+  virt-copy-in -d kolla01 /root/opclab/resources/files/jq /usr/local/bin
 fi
 
 echo -e "Configuration succeeded for lab: ${LAB_CONFIG}\n"
@@ -259,9 +259,9 @@ done
 
 echo -e "Creating inventory file\n"
 for type in "${TYPES[@]}"; do
-  echo -e "[${type}]" >> /root/rpcops-onmetal-labconfigurator/inventory
+  echo -e "[${type}]" >> /root/opclab/inventory
   for node in $(get_host_type ${type}); do
-    echo -e "${node%%":"*}" >> /root/rpcops-onmetal-labconfigurator/inventory
+    echo -e "${node%%":"*}" >> /root/opclab/inventory
   done
   echo -e "\n"
 done

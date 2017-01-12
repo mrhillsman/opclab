@@ -24,7 +24,7 @@ else
   sleep 3
 fi
 
-echo -e "This script is about to bootstrap your system for RPCOPS Lab Configuration\n"
+echo -e "This script is about to bootstrap your system for OPC Lab Configuration\n"
 echo -e "If you want to abort this process...you have 15s\n"
 sleep 5
 clear
@@ -37,7 +37,7 @@ do
 done
 
 # Move to the root directory as starting point
-cd /root/rpcops-onmetal-labconfigurator
+cd /root/opclab
 
 # Get onmetal host bond0.XXX
 __HOST_BOND_INT__=( `ip link list|grep -oP "(?<=\ )bond0\.[0-9]{3}(?=@bond0)"` )
@@ -243,7 +243,7 @@ echo -e "Building virtual network infrastructure\n"
 pushd resources/networks
 
 # Dynamically generate networks that depend on host bond interfaces
-cat << EON > rpcops-drac00-net.xml
+cat << EON > opc-drac00-net.xml
 <network>
   <name>drac00</name>
   <forward dev='${__HOST_BOND_INT__[0]}' mode='nat'>
@@ -259,7 +259,7 @@ cat << EON > rpcops-drac00-net.xml
 </network>
 EON
 
-cat << EON > rpcops-public00-net.xml
+cat << EON > opc-public00-net.xml
 <network>
   <name>public00</name>
   <forward dev='${__HOST_BOND_INT__[0]}' mode='nat'>
@@ -299,7 +299,7 @@ cat << EON > rpcops-public00-net.xml
 </network>
 EON
 
-cat << EON > rpcops-snet00-net.xml
+cat << EON > opc-snet00-net.xml
 <network>
   <name>snet00</name>
   <forward dev='${__HOST_BOND_INT__[1]}' mode='nat'>
@@ -315,7 +315,7 @@ cat << EON > rpcops-snet00-net.xml
 </network>
 EON
 
-for i in rpcops-*-net.xml
+for i in opc-*-net.xml
 do
   virsh net-define $i
 done
@@ -370,7 +370,7 @@ timedatectl set-timezone UTC
 
 echo -e "Updating ntp to serve only local guests"
 rm /etc/ntp.conf
-cp /root/rpcops-onmetal-labconfigurator/resources/files/host-ntp.conf /etc/ntp.conf
+cp /root/opclab/resources/files/host-ntp.conf /etc/ntp.conf
 service ntp restart
 
 echo -e "Adding host SSH key to base images"
@@ -392,4 +392,4 @@ virsh pool-refresh --pool storage
 # Notify end of setup
 touch /root/.hostsetup
 echo -e "Your host machine has been bootstrapped for the lab successfully.\n"
-echo -e "Proceed to run rpcops-lab-setup"
+echo -e "Proceed to run opc-lab-setup"
