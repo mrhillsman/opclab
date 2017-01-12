@@ -1,5 +1,7 @@
 # WIP (DRAFT STATUS)
-[![Stories in Ready](https://badge.waffle.io/mrhillsman/opclab?label=ready&title=Ready)](https://waffle.io/mrhillsman/opclab)
+
+[![Stories in Ready](https://badge.waffle.io/mrhillsman/opclab.svg?label=ready&title=Ready)](http://waffle.io/mrhillsman/opclab)  
+
 ## opclab
 Configuration scripts to build an OpenStack multi-node VM lab environment for onboarding and testing purposes.  
 
