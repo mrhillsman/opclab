@@ -26,6 +26,13 @@
       tags:
         - remove-ansible-in-opt
 
+    - name: Remove ansible roles in etc
+      command: rm -rf roles
+      args:
+        chdir: /etc/ansible
+      tags:
+        - remove-ansible-roles-in-etc
+
     - name: Clone openstack-ansible
       git:
         repo: http://github.com/openstack/openstack-ansible
