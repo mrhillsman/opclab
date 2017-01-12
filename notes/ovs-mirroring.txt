@@ -1,0 +1,73 @@
+--id=@<port> gives you @<port> as a reference to the UUID of the port on the switch
+
+ip link add name mro-lb type veth peer name mri-lb
+ovs-vsctl add-port lbsrvsw mri-lb
+ip link set dev mro-lb up
+ip link set dev mri-lb up
+ovs-vsctl -- --id=@vnet2 get port vnet2 -- set mirror mymirror select_all=true output-port=@vnet2
+
+
+ip link add name mro-infra01 type veth peer name mri-infra01
+ovs-vsctl add-port lbsrvsw mri-infra01
+ip link set dev mro-infra01 up
+ip link set dev mri-infra01 up
+ovs-vsctl \
+-- --id=@m create mirror name=infra01 \
+-- add bridge lbsrvsw mirrors @m \
+-- --id=@vnet21 get port vnet21 \
+-- --id=@vnet23 get port vnet23 \
+-- set mirror infra01 'select_src_port=[@vnet21,@vnet23]' 'select_dst_port=[@vnet21,@vnet23]' \
+-- --id=@mri-infra01 get port mri-infra01 \
+-- set mirror infra01 output-port=@mri-infra01
+
+ip link add name mro-infra02 type veth peer name mri-infra02
+ovs-vsctl add-port lbsrvsw mri-infra02
+ip link set dev mro-infra02 up
+ip link set dev mri-infra02 up
+ovs-vsctl \
+-- --id=@m create mirror name=infra02 \
+-- add bridge lbsrvsw mirrors @m \
+-- --id=@vnet33 get port vnet33 \
+-- --id=@vnet35 get port vnet35 \
+-- set mirror infra02 'select_src_port=[@vnet33,@vnet35]' 'select_dst_port=[@vnet33,@vnet35]' \
+-- --id=@mri-infra02 get port mri-infra01 \
+-- set mirror infra02 output-port=@mri-infra02
+
+ip link add name mro-infra03 type veth peer name mri-infra02
+ovs-vsctl add-port lbsrvsw mri-infra03
+ip link set dev mro-infra03 up
+ip link set dev mri-infra03 up
+ovs-vsctl \
+-- --id=@m create mirror name=infra03 \
+-- add bridge lbsrvsw mirrors @m \
+-- --id=@vnet27 get port vnet27 \
+-- --id=@vnet29 get port vnet29 \
+-- set mirror infra03 'select_src_port=[@vnet27,@vnet29]' 'select_dst_port=[@vnet27,@vnet29]' \
+-- --id=@mri-infra03 get port mri-infra01 \
+-- set mirror infra03 output-port=@mri-infra03
+
+ip link add name mro-compute01 type veth peer name mri-infra02
+ovs-vsctl add-port lbsrvsw mri-compute01
+ip link set dev mro-compute01 up
+ip link set dev mri-compute01 up
+ovs-vsctl \
+-- --id=@m create mirror name=compute01 \
+-- add bridge lbsrvsw mirrors @m \
+-- --id=@vnet15 get port vnet15 \
+-- --id=@vnet17 get port vnet17 \
+-- set mirror compute01 'select_src_port=[@vnet15,@vnet17]' 'select_dst_port=[@vnet15,@vnet17]' \
+-- --id=@mri-compute01 get port mri-infra01 \
+-- set mirror compute01 output-port=@mri-compute01
+
+ip link add name mro-compute02 type veth peer name mri-compute02
+ovs-vsctl add-port lbsrvsw mri-compute02
+ip link set dev mro-compute02 up
+ip link set dev mri-compute02 up
+ovs-vsctl \
+-- --id=@m create mirror name=compute02 \
+-- add bridge lbsrvsw mirrors @m \
+-- --id=@vnet9 get port vnet9 \
+-- --id=@vnet11 get port vnet11 \
+-- set mirror compute02 'select_src_port=[@vnet9,@vnet11]' 'select_dst_port=[@vnet9,@vnet11]' \
+-- --id=@mri-compute02 get port mri-compute02 \
+-- set mirror compute02 output-port=@mri-compute02

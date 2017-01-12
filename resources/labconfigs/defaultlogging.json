@@ -1,0 +1,19 @@
+{
+  "infra": {
+    "infra01": "101",
+    "infra02": "102",
+    "infra03": "103"
+  },
+  "compute": {
+    "compute01": "120",
+    "compute02": "121",
+    "compute03": "122",
+    "compute04": "123",
+    "compute05": "124"
+  },
+  "logging": {
+    "logger01": "110",
+    "logger02": "111",
+    "logger03": "112"
+  }
+}

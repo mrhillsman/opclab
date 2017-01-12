@@ -1,0 +1,113 @@
+---
+- name: Setup OpenStack Ports
+  hosts: localhost
+  connection: local
+  become: yes
+  remote_user: root
+
+#
+# when 2.2 is available will be able to use insert parameter for iptables module
+# destination, in_interface, to_destination need to be grabbed dynamically (possibly using facts)
+#
+  vars:
+    ports:
+      - 80
+      - 443
+      - 873
+      - 8082
+      - 8776
+      - 8774
+      - 8773
+      - 8775
+      - 6080
+      - 6081
+      - 6082
+      - 8386
+      - 5000
+      - 9292
+      - 9191
+      - 9696
+      - 6000
+      - 6001
+      - 6002
+      - 8004
+      - 8000
+      - 8003
+      - 8777
+      - 8080
+      - 3260
+      - 3306
+      - 5672
+      - 3142
+      - 9200
+      - 8888
+      - 8181
+      - 9418
+      - 8042
+      - 6385
+      - 9511
+      - 15672
+      - 35357
+
+  tasks:
+    - name: "Remove all nat table prerouting rules"
+      shell: "/sbin/iptables -t nat -D PREROUTING -i bond0.101 -p tcp -d 104.130.19.191 --dport {{ item }} -j DNAT --to-destination 192.168.0.249:{{ item }}"
+      args:
+        executable: /bin/bash
+      with_items: "{{ ports }}"
+      tags:
+        - remove-rules
+        - remove-prerouting-rules
+
+    - name: "Remove all filter table forward rules"
+      shell: "/sbin/iptables -t filter -D FORWARD -i bond0.101 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+      args:
+        executable: /bin/bash
+      with_items: "{{ ports }}"
+      tags:
+        - remove-rules
+        - remove-forward-rules
+
+    - name: "Add ports to nat table prerouting chain"
+      shell: "/sbin/iptables -t nat -I PREROUTING -i bond0.101 -p tcp -d 104.130.19.191 --dport {{ item }} -j DNAT --to-destination 192.168.0.249:{{ item }}"
+      args:
+        executable: /bin/bash
+      # will use below when insert is supported
+      # iptables:
+      #   chain: PREROUTING
+      #   destination: 104.130.19.191
+      #   destination_port: "{{ item }}"
+      #   in_interface: bond0.101
+      #   jump: DNAT
+      #   protocol: tcp
+      #   state: present
+      #   table: nat
+      #   to_destination: "192.168.0.249:{{ item }}"
+      with_items: "{{ ports }}"
+      tags:
+        - add-rules
+        - add-prerouting-rules
+
+    - name: "Add ports to filter table forward chain"
+      shell: "/sbin/iptables -t filter -I FORWARD -i bond0.101 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+      args:
+        executable: /bin/bash
+      # will use below when insert is supported
+      # iptables:
+      #   chain: FORWARD
+      #   ctstate:
+      #     - NEW
+      #     - RELATED
+      #     - ESTABLISHED
+      #   destination: 192.168.0.249
+      #   destination_port: "{{ item }}"
+      #   in_interface: bond0.101
+      #   jump: ACCEPT
+      #   out_interface: virbr0
+      #   protocol: tcp
+      #   state: present
+      #   table: filter
+      with_items: "{{ ports }}"
+      tags:
+        - add-rules
+        - add-forward-rules

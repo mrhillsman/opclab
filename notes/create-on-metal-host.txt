@@ -1,0 +1,99 @@
+export TENANT=`curl -s https://identity.api.rackspacecloud.com/v2.0/tokens -X POST -d '{"auth":{"RAX-KSKEY:apiKeyCredentials":{"username":"melvin.hillsman-rpc", "apiKey":"049fa524a1b74de8970de80d2e81c848"}}}' -H "Content-Type: application/json" | jq -r .access.token.tenant.id`
+
+export TOKEN=`curl -s https://identity.api.rackspacecloud.com/v2.0/tokens -X POST -d '{"auth":{"RAX-KSKEY:apiKeyCredentials":{"username":"melvin.hillsman-rpc", "apiKey":"049fa524a1b74de8970de80d2e81c848"}}}' -H "Content-Type: application/json" | jq -r .access.token.id`
+
+export ENDPOINT='https://iad.servers.api.rackspacecloud.com/v2/776051'
+
+
+curl -s -X GET $ENDPOINT/images/6e00d4a1-c7a1-4bca-bade-b5467b4eeccb -H "X-Auth-Token: $TOKEN" | jq .
+{
+  "image": {
+    "status": "ACTIVE",
+    "updated": "2016-02-19T03:13:40Z",
+    "links": [
+      {
+        "href": "https://iad.servers.api.rackspacecloud.com/v2/776051/images/6e00d4a1-c7a1-4bca-bade-b5467b4eeccb",
+        "rel": "self"
+      },
+      {
+        "href": "https://iad.servers.api.rackspacecloud.com/776051/images/6e00d4a1-c7a1-4bca-bade-b5467b4eeccb",
+        "rel": "bookmark"
+      },
+      {
+        "href": "https://iad.servers.api.rackspacecloud.com/images/6e00d4a1-c7a1-4bca-bade-b5467b4eeccb",
+        "type": "application/vnd.openstack.image",
+        "rel": "alternate"
+      }
+    ],
+    "OS-DCF:diskConfig": "MANUAL",
+    "id": "6e00d4a1-c7a1-4bca-bade-b5467b4eeccb",
+    "OS-EXT-IMG-SIZE:size": 824814080,
+    "name": "OnMetal - Ubuntu 14.04 LTS (Trusty Tahr)",
+    "created": "2016-02-18T22:51:37Z",
+    "minDisk": 20,
+    "progress": 100,
+    "minRam": 512,
+    "metadata": {
+      "com.rackspace__1__options": "0",
+      "flavor_classes": "onmetal,onmetal2",
+      "vm_mode": "metal",
+      "com.rackspace__1__build_rackconnect": "1",
+      "com.rackspace__1__build_core": "1",
+      "os_distro": "ubuntu",
+      "org.openstack__1__os_distro": "com.ubuntu",
+      "com.rackspace__1__release_id": "1007",
+      "image_type": "base",
+      "com.rackspace__1__source": "kickstart",
+      "com.rackspace__1__platform_target": "PublicCloud",
+      "com.rackspace__1__build_managed": "1",
+      "org.openstack__1__architecture": "x64",
+      "com.rackspace__1__visible_core": "1",
+      "com.rackspace__1__release_build_date": "2016-02-18_22-29-27",
+      "com.rackspace__1__visible_rackconnect": "1",
+      "com.rackspace__1__release_version": "14",
+      "com.rackspace__1__visible_managed": "1",
+      "cache_in_nova": "True",
+      "com.rackspace__1__build_config_options": "rack_user_only,base_mgdops_config,mailgun,backup_agent_only,backup_defaults,monitoring_agent_only,monitoring_defaults,updates",
+      "auto_disk_config": "disabled",
+      "os_type": "linux",
+      "org.openstack__1__os_version": "14.04"
+    }
+  }
+}
+
+
+curl -s -X GET $ENDPOINT/flavors/onmetal-io1 -H "X-Auth-Token: $TOKEN" | jq .
+{
+  "flavor": {
+    "OS-FLV-WITH-EXT-SPECS:extra_specs": {
+      "quota_resources": "instances=onmetal-io-v1-instances,ram=onmetal-io-v1-ram",
+      "class": "onmetal",
+      "policy_class": "onmetal_flavor"
+    },
+    "name": "OnMetal IO v1",
+    "links": [
+      {
+        "href": "https://iad.servers.api.rackspacecloud.com/v2/776051/flavors/onmetal-io1",
+        "rel": "self"
+      },
+      {
+        "href": "https://iad.servers.api.rackspacecloud.com/776051/flavors/onmetal-io1",
+        "rel": "bookmark"
+      }
+    ],
+    "ram": 131072,
+    "vcpus": 40,
+    "swap": "",
+    "rxtx_factor": 10000,
+    "OS-FLV-EXT-DATA:ephemeral": 3200,
+    "disk": 32,
+    "id": "onmetal-io1"
+  }
+}
+
+
+
+curl -s $ENDPOINT/servers -X POST -H "Content-Type: application/json" -H "X-Auth-Token: $TOKEN" -H "X-Auth-Project-Id: rpcops-lab-build" -d '{"server": {"name":"created-from-cli", "imageRef":"6e00d4a1-c7a1-4bca-bade-b5467b4eeccb", "flavorRef":"onmetal-io1", "key_name":"rpc-labs-shared"}}' | jq .
+
+
+curl -s $ENDPOINT/servers/9052e35a-42b7-4648-82bd-b44c2b73db1b -X DELETE -H "Content-Type: application/json" -H "X-Auth-Token: $TOKEN"

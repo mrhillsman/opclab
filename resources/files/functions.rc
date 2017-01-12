@@ -1,0 +1,232 @@
+#!/bin/bash
+
+# This file contains helper functions:
+# wait_ssh
+# get_host_type
+# get_all_hosts
+# configure_vpx
+# clear_vpx
+# update_vpx_license
+# configure_vyos
+# detach_disks
+# attach_disks
+# create_snapshot
+# restore_snapshot
+# create_lab
+# destroy_lab
+# reset_lab
+# host_to_os_ports
+
+function wait_ssh() {
+echo "Waiting for all nodes to become available."
+for node in $(get_all_hosts); do
+    echo "Waiting for node: ${node%%":"*} on 10.5.0.${node#*":"}"
+    ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 10.5.0.${node#*":"} exit > /dev/null
+    while test $? -gt 0; do
+      sleep 7
+      ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 10.5.0.${node#*":"} exit > /dev/null
+    done
+done
+}
+
+function get_host_type () {
+python <<EOF
+import json
+with open('resources/labconfigs/${LAB_CONFIG}.json') as f:
+    x = json.loads(f.read())
+    try:
+        for k, v in x.get("$1").items():
+            print('%s:%s' % (k, v))
+    except:
+        pass
+EOF
+}
+
+function get_all_hosts () {
+python <<EOF
+import json
+with open('resources/labconfigs/${LAB_CONFIG}.json') as f:
+    x = json.loads(f.read())
+for i in x.values():
+    for k, v in i.items():
+      print('%s:%s' % (k, v))
+EOF
+}
+
+# Add all containers to VPX: Configure VirtualServers and Node Pools
+config_vpx() {
+# Configure servers/services
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name") \($server."ansible_ssh_host")"'|grep -i container|while read i; do echo "add server ${i}"; done;
+
+# Bind servers/services to ServiceGroups / Pools
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i horizon|while read i; do echo "bind serviceGroup RPC_POOL_HORIZON ${i} 80"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i horizon|while read i; do echo "bind serviceGroup RPC_POOL_HORIZON_SSL ${i} 443"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i keystone|while read i; do echo "bind serviceGroup RPC_POOL_KEYSTONE_SERVICE ${i} 5000"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i galera|while read i; do echo "bind serviceGroup RPC_POOL_GALERA ${i} 3306"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i elasticsearch|while read i; do echo "bind serviceGroup RPC_POOL_ELASTICSEARCH ${i} 9200"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i neutron_server|while read i; do echo "bind serviceGroup RPC_POOL_NEUTRON_SERVER ${i} 9696"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i nova_api_ec2|while read i; do echo "bind serviceGroup RPC_POOL_NOVA_API_EC2 ${i} 8773"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i heat_apis|while read i; do echo "bind serviceGroup RPC_POOL_HEAT_API ${i} 8004"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i cinder_api|while read i; do echo "bind serviceGroup RPC_POOL_CINDER_API ${i} 8776"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i kibana|while read i; do echo "bind serviceGroup RPC_POOL_KIBANA ${i} 8888"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i nova_api_metadata|while read i; do echo "bind serviceGroup RPC_POOL_NOVA_API_METADATA ${i} 8775"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i nova_api_os_compute|while read i; do echo "bind serviceGroup RPC_POOL_NOVA_API_OS_COMPUTE ${i} 8774"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i glance|while read i; do echo "bind serviceGroup RPC_POOL_GLANCE_API ${i} 9292"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i nova_spice_console|while read i; do echo "bind serviceGroup RPC_POOL_NOVA_SPICE_CONSOLE ${i} 6082"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i nova_console|while read i; do echo "bind serviceGroup RPC_POOL_NOVA_SPICE_CONSOLE ${i} 6082"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i heat_apis|while read i; do echo "bind serviceGroup RPC_POOL_HEAT_API_CLOUDWATCH ${i} 8003"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i heat_apis|while read i; do echo "bind serviceGroup RPC_POOL_HEAT_API_CFN ${i} 8000"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i glance|while read i; do echo "bind serviceGroup RPC_POOL_GLANCE_REGISTRY ${i} 9191"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i kibana|while read i; do echo "bind serviceGroup RPC_POOL_SWIFT ${i} 8080"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i keystone|while read i; do echo "bind serviceGroup RPC_POOL_KEYSTONE_ADMIN ${i} 35357"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i kibana|while read i; do echo "bind serviceGroup RPC_POOL_KIBANA_SSL ${i} 8443"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i repo|while read i; do echo "bind serviceGroup RPC_POOL_REPO ${i} 8181"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i aodh|while read i; do echo "bind serviceGroup RPC_POOL_AODH ${i} 8042"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i ceilometer|while read i; do echo "bind serviceGroup RPC_POOL_CEILOMETER_API ${i} 8777"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i sahara|while read i; do echo "bind serviceGroup RPC_POOL_SAHARA ${i} 8386"; done;
+cat /etc/openstack_deploy/openstack_inventory.json | jq -r '._meta | .hostvars[] as $server | "\($server."container_name")"'|grep -i murano|while read i; do echo "bind serviceGroup RPC_POOL_MURANO ${i} 8082"; done;
+}
+
+# Remove all containers from VPX: empty VirtualServers and Node Pools
+clear_vpx() {
+# Check if password-less login to VPX is working
+ssh -o BatchMode=yes nsroot@10.5.0.4 'exit'
+
+# If password-less login works, remove containers from VPX
+# else setup password-login and then remove containers from VPX
+if [ $? -eq 0 ]; then
+  # Remove all containers from the VPX
+  for server in `ssh nsroot@10.5.0.4 'show server'|awk '/Name/ { print $3 }'`
+  do
+    ssh nsroot@10.5.0.4 "rm server $server"
+  done
+  ssh nsroot@10.5.0.4 'save config'
+else
+  echo -e "Password is nsroot\n"
+  __SSHKEY__=$(cat /root/.ssh/id_rsa.pub|cut -d' ' -f1,2)
+  ssh nsroot@10.5.0.4 <<EOF
+shell touch /nsconfig/ssh/authorized_keys && \
+chmod 600 /nsconfig/ssh/authorized_keys && \
+echo $__SSHKEY__ > /nsconfig/ssh/authorized_keys
+EOF
+
+  # Remove all containers from the VPX
+  for server in `ssh nsroot@10.5.0.4 'show server'|awk '/Name/ { print $3 }'`
+  do
+    ssh nsroot@10.5.0.4 "rm server $server"
+  done
+  ssh nsroot@10.5.0.4 'save config'
+fi
+}
+
+fix_vpx_license() {
+  # Check that empty-expect is installed and install if not
+  dpkg --get-selections | grep empty
+  rc=$?
+
+  if ! [ $rc -eq 0 ]; then
+    apt-get install -y empty-expect
+  fi
+
+  # Check if password-less login to VPX is working
+  ssh -o BatchMode=yes nsroot@10.5.0.4 'exit'
+
+  if ! [ $? -eq 0 ]; then
+    # Copy host key to VPX
+    __SSHKEY__=$(cat /root/.ssh/id_rsa.pub|cut -d' ' -f1,2)
+    empty -f -i input.fifo -o output.fifo -p vpxconfig.pid -L vpxconfig.log ssh -o StrictHostKeyChecking=no nsroot@10.5.0.4
+    empty -w -i output.fifo -o input.fifo "Password" "nsroot\n"
+    empty -w -i output.fifo -o input.fifo "> " "shell\n"
+    empty -w -i output.fifo -o input.fifo "root\@loadbalancer" "touch /nsconfig/ssh/authorized_keys\n"
+    empty -w -i output.fifo -o input.fifo "root\@loadbalancer" "chmod 600 /nsconfig/ssh/authorized_keys\n"
+    empty -w -i output.fifo -o input.fifo "root\@loadbalancer" "echo $__SSHKEY__ >> /nsconfig/ssh/authorized_keys\n"
+    empty -w -i output.fifo -o input.fifo "root\@loadbalancer" "exit\n"
+    empty -w -i output.fifo -o input.fifo "> " "exit\n"
+  fi
+
+  # Check for valid VPX license
+  ssh nsroot@10.5.0.4 <<EOF | grep -m1 -oP "Load Balancing: ..."
+show license
+EOF
+
+  if ! [ $? -eq 0 ]; then
+    # Remove current license
+    ssh nsroot@10.5.0.4 <<EOF
+shell rm -f /nsconfig/license/*.lic
+EOF
+
+    # Add new license to load balancer
+    ssh nsroot@10.5.0.4 <<EOF
+shell cd /nsconfig/license && \
+curl -sk https://raw.githubusercontent.com/mrhillsman/rpcops-onmetal-labconfigurator/master/resources/files/lb.lic -o lb.lic
+EOF
+
+    # Get session token
+    __NSTOKEN__=`curl -s -X POST -H 'Content-Type: application/json' \
+    http://10.5.0.4/nitro/v1/config/login \
+    -d '{"login": {"username":"nsroot","password":"nsroot","timeout":3600}}'|jq -r .sessionid`
+
+    # Warm reboot the load balancer
+    curl -s -X POST -H 'Content-Type: application/json' \
+    -H "Cookie: NITRO_AUTH_TOKEN=$__NSTOKEN__" \
+    http://10.5.0.4/nitro/v1/config/reboot -d '{"reboot":{"warm":true}}'
+  fi
+}
+
+
+destroy_all() {
+  echo -e "Completing removing OpenStack VMs\n"
+  # Change to libvirt images directory
+  pushd /var/lib/libvirt/images
+
+  # Force shutdown and remove all instances
+  for i in `virsh list --all --name|awk '/infra|compute|storage|cinder|ceph|swift|logger/ { print }'`; do virsh destroy $i; done;
+  for i in `virsh list --all --name|awk '/infra|compute|storage|cinder|ceph|swift|logger/ { print }'`; do virsh undefine $i; done;
+
+  # Delete all disks
+  echo -e "Removing disk images\n"
+  find . -regextype posix-extended -iregex '.*(infra|compute|storage|cinder|ceph|swift|logger).*' -delete
+  echo -e "Lab completed destroyed\n"
+
+  # Return to previous directory
+  popd
+}
+
+configure_vyos() {
+
+}
+
+detach_disks() {
+
+}
+
+attach_disks() {
+
+}
+
+create_snapshot() {
+
+}
+
+restore_snapshot() {
+
+}
+
+create_lab() {
+
+}
+
+destroy_lab() {
+
+}
+
+reset_lab() {
+  read __RESET -p "RESETTING LAB TO MINT CONDITION SNAPSHOTS, CONTINUE? [y/N]: "
+  if [ ${__RESET} == "y" ]; then
+    for i in `virsh list --all --name|grep -P "(infra|logger|compute|swift|cinder|ceph)"`; do
+      virsh snapshot-revert --domain $i --snapshotname ${i}-mint
+    done
+  else
+    echo -e "RESET CANCELED"
+  fi
+}

@@ -1,0 +1,24 @@
+---
+- name: Setup OpenStack Network
+  become: yes
+  remote_user: root
+  hosts: localhost
+
+  tasks:
+    - name: Get OpenStack Credentials
+
+    - name: Source OpenStack Credentials
+
+    - name: Create External Network
+
+    - name: Create External Network Subnet
+
+    - name: Create Internal Network
+
+    - name: Create Internal Network Subnet
+
+    - name: Create External Router
+
+    - name: Set Router Gateway to External Network
+
+    - name: Add Internal Network to Router

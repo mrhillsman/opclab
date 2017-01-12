@@ -1,0 +1,759 @@
+interfaces {
+    ethernet eth0 {
+        address 192.168.0.2/22
+        address 192.168.0.3/22
+        address 192.168.0.4/22
+        address 192.168.0.5/22
+        address 192.168.0.6/22
+        address 192.168.0.7/22
+        address 192.168.0.101/22
+        address 192.168.0.102/22
+        address 192.168.0.103/22
+        address 192.168.0.104/22
+        address 192.168.0.105/22
+        address 192.168.0.106/22
+        address 192.168.0.107/22
+        address 192.168.0.108/22
+        address 192.168.0.109/22
+        address 192.168.0.110/22
+        address 192.168.0.111/22
+        address 192.168.0.112/22
+        address 192.168.0.113/22
+        address 192.168.0.114/22
+        address 192.168.0.115/22
+        address 192.168.0.116/22
+        address 192.168.0.117/22
+        address 192.168.0.118/22
+        address 192.168.0.119/22
+        address 192.168.0.120/22
+        address 192.168.0.121/22
+        address 192.168.0.122/22
+        address 192.168.0.123/22
+        address 192.168.0.124/22
+        address 192.168.0.249/22
+        address 192.168.0.250/22
+        address 192.168.0.251/22
+        address 192.168.0.252/22
+        address 192.168.0.253/22
+        address 192.168.0.254/22
+        address 192.168.1.1/22
+        address 192.168.1.2/22
+        address 192.168.1.3/22
+        address 192.168.1.4/22
+        address 192.168.1.5/22
+        address 192.168.1.6/22
+        address 192.168.1.7/22
+        address 192.168.1.8/22
+        address 192.168.1.9/22
+        address 192.168.1.10/22
+        address 192.168.1.11/22
+        address 192.168.1.12/22
+        address 192.168.1.13/22
+        address 192.168.1.14/22
+        address 192.168.1.15/22
+        address 192.168.1.16/22
+        address 192.168.1.17/22
+        address 192.168.1.18/22
+        address 192.168.1.19/22
+        address 192.168.1.20/22
+        address 192.168.1.21/22
+        address 192.168.1.22/22
+        address 192.168.1.23/22
+        address 192.168.1.24/22
+        address 192.168.1.25/22
+        address 192.168.1.26/22
+        address 192.168.1.27/22
+        address 192.168.1.28/22
+        address 192.168.1.29/22
+        address 192.168.1.30/22
+        address 192.168.1.31/22
+        address 192.168.1.32/22
+        address 192.168.1.33/22
+        address 192.168.1.34/22
+        address 192.168.1.35/22
+        address 192.168.1.36/22
+        address 192.168.1.37/22
+        address 192.168.1.38/22
+        address 192.168.1.39/22
+        address 192.168.1.40/22
+        address 192.168.1.41/22
+        address 192.168.1.42/22
+        address 192.168.1.43/22
+        address 192.168.1.44/22
+        address 192.168.1.45/22
+        address 192.168.1.46/22
+        address 192.168.1.47/22
+        address 192.168.1.48/22
+        address 192.168.1.49/22
+        address 192.168.1.50/22
+        address 192.168.1.51/22
+        address 192.168.1.52/22
+        address 192.168.1.53/22
+        address 192.168.1.54/22
+        address 192.168.1.55/22
+        address 192.168.1.56/22
+        address 192.168.1.57/22
+        address 192.168.1.58/22
+        address 192.168.1.59/22
+        address 192.168.1.60/22
+        address 192.168.1.61/22
+        address 192.168.1.62/22
+        address 192.168.1.63/22
+        address 192.168.1.64/22
+        address 192.168.1.65/22
+        address 192.168.1.66/22
+        address 192.168.1.67/22
+        address 192.168.1.68/22
+        address 192.168.1.69/22
+        address 192.168.1.70/22
+        address 192.168.1.71/22
+        address 192.168.1.72/22
+        address 192.168.1.73/22
+        address 192.168.1.74/22
+        address 192.168.1.75/22
+        address 192.168.1.76/22
+        address 192.168.1.77/22
+        address 192.168.1.78/22
+        address 192.168.1.79/22
+        address 192.168.1.80/22
+        address 192.168.1.81/22
+        address 192.168.1.82/22
+        address 192.168.1.83/22
+        address 192.168.1.84/22
+        address 192.168.1.85/22
+        address 192.168.1.86/22
+        address 192.168.1.87/22
+        address 192.168.1.88/22
+        address 192.168.1.89/22
+        address 192.168.1.90/22
+        address 192.168.1.91/22
+        address 192.168.1.92/22
+        address 192.168.1.93/22
+        address 192.168.1.94/22
+        address 192.168.1.95/22
+        address 192.168.1.96/22
+        address 192.168.1.97/22
+        address 192.168.1.98/22
+        address 192.168.1.99/22
+        description WAN
+        duplex auto
+        hw-id 52:54:00:00:01:05
+        smp_affinity auto
+        speed auto
+    }
+    ethernet eth1 {
+        description LAN
+        duplex auto
+        hw-id 52:54:00:00:01:06
+        smp_affinity auto
+        speed auto
+        vif 100 {
+            address 172.24.96.1/22
+            description "VLAN 100"
+        }
+    }
+    ethernet eth2 {
+        address 10.5.0.2/24
+        description DRAC
+        duplex auto
+        firewall {
+            local {
+            }
+        }
+        hw-id 52:54:00:00:01:07
+        smp_affinity auto
+        speed auto
+    }
+    loopback lo {
+    }
+}
+nat {
+    destination {
+        rule 101 {
+            destination {
+                address 192.168.0.101
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.101
+            }
+        }
+        rule 102 {
+            destination {
+                address 192.168.0.102
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.102
+            }
+        }
+        rule 103 {
+            destination {
+                address 192.168.0.103
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.103
+            }
+        }
+        rule 104 {
+            destination {
+                address 192.168.0.104
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.104
+            }
+        }
+        rule 105 {
+            destination {
+                address 192.168.0.105
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.105
+            }
+        }
+        rule 106 {
+            destination {
+                address 192.168.0.106
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.106
+            }
+        }
+        rule 107 {
+            destination {
+                address 192.168.0.107
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.107
+            }
+        }
+        rule 108 {
+            destination {
+                address 192.168.0.108
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.108
+            }
+        }
+        rule 109 {
+            destination {
+                address 192.168.0.109
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.109
+            }
+        }
+        rule 110 {
+            destination {
+                address 192.168.0.110
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.110
+            }
+        }
+        rule 111 {
+            destination {
+                address 192.168.0.111
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.111
+            }
+        }
+        rule 112 {
+            destination {
+                address 192.168.0.112
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.112
+            }
+        }
+        rule 113 {
+            destination {
+                address 192.168.0.113
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.113
+            }
+        }
+        rule 114 {
+            destination {
+                address 192.168.0.114
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.114
+            }
+        }
+        rule 115 {
+            destination {
+                address 192.168.0.115
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.115
+            }
+        }
+        rule 116 {
+            destination {
+                address 192.168.0.116
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.116
+            }
+        }
+        rule 117 {
+            destination {
+                address 192.168.0.117
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.117
+            }
+        }
+        rule 118 {
+            destination {
+                address 192.168.0.118
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.118
+            }
+        }
+        rule 119 {
+            destination {
+                address 192.168.0.119
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.119
+            }
+        }
+        rule 120 {
+            destination {
+                address 192.168.0.120
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.120
+            }
+        }
+        rule 121 {
+            destination {
+                address 192.168.0.121
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.121
+            }
+        }
+        rule 122 {
+            destination {
+                address 192.168.0.122
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.122
+            }
+        }
+        rule 123 {
+            destination {
+                address 192.168.0.123
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.123
+            }
+        }
+        rule 124 {
+            destination {
+                address 192.168.0.124
+            }
+            inbound-interface eth0
+            translation {
+                address 10.239.0.124
+            }
+        }
+        rule 400 {
+            destination {
+                address 192.168.0.2
+            }
+            inbound-interface eth0
+            translation {
+                address 172.24.96.1
+            }
+        }
+        rule 450 {
+            destination {
+                address 192.168.0.249
+            }
+            inbound-interface eth0
+            translation {
+                address 172.24.96.249
+            }
+        }
+        rule 500 {
+            destination {
+                address 192.168.0.253
+            }
+            inbound-interface eth0
+            translation {
+                address 172.29.236.100
+            }
+        }
+    }
+    source {
+        rule 101 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.101
+            }
+            translation {
+                address 192.168.0.101
+            }
+        }
+        rule 102 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.102
+            }
+            translation {
+                address 192.168.0.102
+            }
+        }
+        rule 103 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.103
+            }
+            translation {
+                address 192.168.0.103
+            }
+        }
+        rule 104 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.104
+            }
+            translation {
+                address 192.168.0.104
+            }
+        }
+        rule 105 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.105
+            }
+            translation {
+                address 192.168.0.105
+            }
+        }
+        rule 106 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.106
+            }
+            translation {
+                address 192.168.0.106
+            }
+        }
+        rule 107 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.107
+            }
+            translation {
+                address 192.168.0.107
+            }
+        }
+        rule 108 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.108
+            }
+            translation {
+                address 192.168.0.108
+            }
+        }
+        rule 109 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.109
+            }
+            translation {
+                address 192.168.0.109
+            }
+        }
+        rule 110 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.110
+            }
+            translation {
+                address 192.168.0.110
+            }
+        }
+        rule 111 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.111
+            }
+            translation {
+                address 192.168.0.111
+            }
+        }
+        rule 112 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.112
+            }
+            translation {
+                address 192.168.0.112
+            }
+        }
+        rule 113 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.113
+            }
+            translation {
+                address 192.168.0.113
+            }
+        }
+        rule 114 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.114
+            }
+            translation {
+                address 192.168.0.114
+            }
+        }
+        rule 115 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.115
+            }
+            translation {
+                address 192.168.0.115
+            }
+        }
+        rule 116 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.116
+            }
+            translation {
+                address 192.168.0.116
+            }
+        }
+        rule 117 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.117
+            }
+            translation {
+                address 192.168.0.117
+            }
+        }
+        rule 118 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.118
+            }
+            translation {
+                address 192.168.0.118
+            }
+        }
+        rule 119 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.119
+            }
+            translation {
+                address 192.168.0.119
+            }
+        }
+        rule 120 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.120
+            }
+            translation {
+                address 192.168.0.120
+            }
+        }
+        rule 121 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.121
+            }
+            translation {
+                address 192.168.0.121
+            }
+        }
+        rule 122 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.122
+            }
+            translation {
+                address 192.168.0.122
+            }
+        }
+        rule 123 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.123
+            }
+            translation {
+                address 192.168.0.123
+            }
+        }
+        rule 124 {
+            outbound-interface eth0
+            source {
+                address 10.239.0.124
+            }
+            translation {
+                address 192.168.0.124
+            }
+        }
+        rule 400 {
+            outbound-interface eth0
+            source {
+                address 172.24.96.1
+            }
+            translation {
+                address 192.168.0.2
+            }
+        }
+        rule 450 {
+            outbound-interface eth0
+            source {
+                address 172.24.96.249
+            }
+            translation {
+                address 192.168.0.249
+            }
+        }
+        rule 500 {
+            outbound-interface eth0
+            source {
+                address 172.29.236.100
+            }
+            translation {
+                address 192.168.0.253
+            }
+        }
+    }
+}
+protocols {
+    static {
+        route 10.5.0.0/24 {
+            next-hop 10.5.0.1 {
+                distance 1
+            }
+        }
+        route 10.239.0.0/22 {
+            next-hop 172.24.96.249 {
+            }
+        }
+        route 10.240.0.0/22 {
+            next-hop 172.24.96.249 {
+            }
+        }
+        route 172.29.236.0/22 {
+            next-hop 172.24.96.249 {
+            }
+        }
+    }
+}
+service {
+    https {
+        http-redirect enable
+        listen-address 10.5.0.2
+    }
+    ssh {
+        listen-address 10.5.0.2
+        port 22
+    }
+}
+system {
+    config-management {
+        commit-revisions 20
+    }
+    console {
+        device ttyS0 {
+            speed 9600
+        }
+    }
+    gateway-address 192.168.0.1
+    host-name firewall
+    login {
+        user vyos {
+            authentication {
+                encrypted-password $1$oM.czaHI$/FQRPf7ZDBtIupLDAt1Ks0
+                plaintext-password ""
+            }
+            level admin
+        }
+    }
+    name-server 8.8.8.8
+    name-server 8.8.4.4
+    ntp {
+        server 0.pool.ntp.org {
+            prefer
+        }
+        server 1.pool.ntp.org {
+        }
+        server 2.pool.ntp.org {
+        }
+    }
+    package {
+        auto-sync 1
+        repository community {
+            components main
+            distribution helium
+            password ""
+            url http://packages.vyos.net/vyos
+            username ""
+        }
+        repository squeeze-backports {
+            components main
+            distribution squeeze-backports
+            password ""
+            url http://backports.debian.org/debian-backports
+            username ""
+        }
+        repository squeeze-lts {
+            components "main contrib non-free"
+            distribution squeeze-lts
+            password ""
+            url http://mirrors.kernel.org/debian
+            username ""
+        }
+    }
+    syslog {
+        global {
+            facility all {
+                level notice
+            }
+            facility protocols {
+                level debug
+            }
+        }
+    }
+    time-zone UTC
+}

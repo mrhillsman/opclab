@@ -1,0 +1,212 @@
+#!/bin/vbash
+
+source /opt/vyatta/etc/functions/script-template
+
+configure
+
+set interfaces ethernet eth0 address 192.168.0.2/24
+
+commit
+
+set interfaces ethernet eth0 address 192.168.0.249/24
+
+commit
+
+for i in {2..254}
+do
+        set interfaces ethernet eth0 address 192.168.239.${i}/24
+        set interfaces ethernet eth0 address 192.168.240.${i}/24
+        set interfaces ethernet eth0 address 192.168.241.${i}/24
+        set interfaces ethernet eth0 address 192.168.242.${i}/24
+        set interfaces ethernet eth0 address 192.168.243.${i}/24
+        set interfaces ethernet eth0 address 192.168.244.${i}/24
+        set interfaces ethernet eth0 address 192.168.245.${i}/24
+        set interfaces ethernet eth0 address 192.168.246.${i}/24
+        set interfaces ethernet eth0 address 192.168.247.${i}/24
+        set interfaces ethernet eth0 address 192.168.248.${i}/24
+        set interfaces ethernet eth0 address 192.168.249.${i}/24
+        set interfaces ethernet eth0 address 192.168.250.${i}/24
+done
+
+commit
+
+delete interfaces ethernet eth1 address
+delete interfaces ethernet eth1 vif
+set interfaces ethernet eth1 address 172.24.96.1/22
+set interfaces ethernet eth1 address 172.29.236.1/22
+set interfaces ethernet eth1 address 10.239.0.1/24
+set interfaces ethernet eth1 vif 205 address 10.240.0.1/24
+set interfaces ethernet eth1 vif 206 address 10.241.0.1/24
+set interfaces ethernet eth1 vif 207 address 10.242.0.1/24
+set interfaces ethernet eth1 vif 208 address 10.243.0.1/24
+set interfaces ethernet eth1 vif 209 address 10.244.0.1/24
+set interfaces ethernet eth1 vif 210 address 10.245.0.1/24
+set interfaces ethernet eth1 vif 211 address 10.246.0.1/24
+set interfaces ethernet eth1 vif 212 address 10.247.0.1/24
+set interfaces ethernet eth1 vif 213 address 10.248.0.1/24
+set interfaces ethernet eth1 vif 214 address 10.249.0.1/24
+set interfaces ethernet eth1 vif 215 address 10.250.0.1/24
+
+commit
+
+set nat destination rule 2
+set nat destination rule 2 destination address 192.168.239.0/24
+set nat destination rule 2 inbound-interface eth0
+set nat destination rule 2 translation address 10.239.0.0/24
+set nat destination rule 3
+set nat destination rule 3 destination address 192.168.240.0/24
+set nat destination rule 3 inbound-interface eth0
+set nat destination rule 3 translation address 10.240.0.0/24
+set nat destination rule 4
+set nat destination rule 4 destination address 192.168.241.0/24
+set nat destination rule 4 inbound-interface eth0
+set nat destination rule 4 translation address 10.241.0.0/24
+set nat destination rule 5
+set nat destination rule 5 destination address 192.168.242.0/24
+set nat destination rule 5 inbound-interface eth0
+set nat destination rule 5 translation address 10.242.0.0/24
+set nat destination rule 6
+set nat destination rule 6 destination address 192.168.243.0/24
+set nat destination rule 6 inbound-interface eth0
+set nat destination rule 6 translation address 10.243.0.0/24
+set nat destination rule 7
+set nat destination rule 7 destination address 192.168.244.0/24
+set nat destination rule 7 inbound-interface eth0
+set nat destination rule 7 translation address 10.244.0.0/24
+set nat destination rule 8
+set nat destination rule 8 destination address 192.168.245.0/24
+set nat destination rule 8 inbound-interface eth0
+set nat destination rule 8 translation address 10.245.0.0/24
+set nat destination rule 9
+set nat destination rule 9 destination address 192.168.246.0/24
+set nat destination rule 9 inbound-interface eth0
+set nat destination rule 9 translation address 10.246.0.0/24
+set nat destination rule 10
+set nat destination rule 10 destination address 192.168.247.0/24
+set nat destination rule 10 inbound-interface eth0
+set nat destination rule 10 translation address 10.247.0.0/24
+set nat destination rule 11
+set nat destination rule 11 destination address 192.168.248.0/24
+set nat destination rule 11 inbound-interface eth0
+set nat destination rule 11 translation address 10.248.0.0/24
+set nat destination rule 12
+set nat destination rule 12 destination address 192.168.249.0/24
+set nat destination rule 12 inbound-interface eth0
+set nat destination rule 12 translation address 10.249.0.0/24
+set nat destination rule 13
+set nat destination rule 13 destination address 192.168.250.0/24
+set nat destination rule 13 inbound-interface eth0
+set nat destination rule 13 translation address 10.250.0.0/24
+
+commit
+
+delete nat destination rule 3038
+set nat destination rule 3038
+set nat destination rule 3038 destination address 192.168.0.249
+set nat destination rule 3038 inbound-interface eth0
+set nat destination rule 3038 translation address 172.24.96.249
+
+commit
+
+set nat source rule 2
+set nat source rule 2 outbound-interface eth0
+set nat source rule 2 source address 10.239.0.0/24
+set nat source rule 2 translation address 192.168.239.0/24
+set nat source rule 3
+set nat source rule 3 outbound-interface eth0
+set nat source rule 3 source address 10.240.0.0/24
+set nat source rule 3 translation address 192.168.240.0/24
+set nat source rule 4
+set nat source rule 4 outbound-interface eth0
+set nat source rule 4 source address 10.241.0.0/24
+set nat source rule 4 translation address 192.168.241.0/24
+set nat source rule 5
+set nat source rule 5 outbound-interface eth0
+set nat source rule 5 source address 10.242.0.0/24
+set nat source rule 5 translation address 192.168.242.0/24
+set nat source rule 6
+set nat source rule 6 outbound-interface eth0
+set nat source rule 6 source address 10.243.0.0/24
+set nat source rule 6 translation address 192.168.243.0/24
+set nat source rule 7
+set nat source rule 7 outbound-interface eth0
+set nat source rule 7 source address 10.244.0.0/24
+set nat source rule 7 translation address 192.168.244.0/24
+set nat source rule 8
+set nat source rule 8 outbound-interface eth0
+set nat source rule 8 source address 10.245.0.0/24
+set nat source rule 8 translation address 192.168.245.0/24
+set nat source rule 9
+set nat source rule 9 outbound-interface eth0
+set nat source rule 9 source address 10.246.0.0/24
+set nat source rule 9 translation address 192.168.246.0/24
+set nat source rule 10
+set nat source rule 10 outbound-interface eth0
+set nat source rule 10 source address 10.247.0.0/24
+set nat source rule 10 translation address 192.168.247.0/24
+set nat source rule 11
+set nat source rule 11 outbound-interface eth0
+set nat source rule 11 source address 10.248.0.0/24
+set nat source rule 11 translation address 192.168.248.0/24
+set nat source rule 12
+set nat source rule 12 outbound-interface eth0
+set nat source rule 12 source address 10.249.0.0/24
+set nat source rule 12 translation address 192.168.249.0/24
+set nat source rule 13
+set nat source rule 13 outbound-interface eth0
+set nat source rule 13 source address 10.250.0.0/24
+set nat source rule 13 translation address 192.168.250.0/24
+
+commit
+
+delete nat source rule 3038
+set nat source rule 3038
+set nat source rule 3038 outbound-interface eth0
+set nat source rule 3038 source address 172.24.96.249
+set nat source rule 3038 translation address 192.168.0.249
+
+commit
+
+delete protocols static
+set protocols static route 0.0.0.0/0 next-hop 192.168.0.1
+set protocols static route 10.239.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.240.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.241.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.242.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.243.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.244.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.245.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.246.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.247.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.248.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.249.0.0/24 next-hop 172.24.96.249
+set protocols static route 10.250.0.0/24 next-hop 172.24.96.249
+set protocols static route 172.29.236.0/22 next-hop 172.29.236.100
+set protocols static route 172.29.240.0/22 next-hop 172.29.236.100
+set protocols static route 172.29.244.0/22 next-hop 172.29.236.100
+set protocols static route 172.29.248.0/22 next-hop 172.29.236.100
+
+commit
+
+set service ssh allow-root
+set service ssh disable-host-validation
+set service ssh listen-address 192.168.0.2
+set service ssh port 22
+
+commit
+
+set system domain-name firewall.local
+set system host-name firewall
+set service dns forwarding cache-size 1000
+delete service dns forwarding listen-on
+delete service dns forwarding name-server
+set service dns forwarding listen-on eth1
+set service dns forwarding name-server 8.8.8.8
+set service dns forwarding name-server 8.8.4.4
+
+commit
+save
+save config
+exit
+
+exit

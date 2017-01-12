@@ -1,0 +1,24 @@
+---
+- name: Post OpenStack Installation Defaults
+  become: yes
+  remote_user: root
+  hosts: localhost
+
+  tasks:
+    - name: Get cloud images
+
+    - name: Import images into Glance
+
+    - name: Create security group
+
+    - name: Create key-pair
+
+    - name: Create five floating IPs
+
+    - name: Create an instance
+
+    - name: Create block storage
+
+    - name: Create object storage
+
+    - name: Attach block storage to instance

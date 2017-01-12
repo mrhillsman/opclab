@@ -1,0 +1,206 @@
+#!/bin/bash
+
+echo "
+###############################################
+#                                             #
+#     Welcome to RPCOPS Lab Builder           #
+#                                             #
+#     Please select your deployment[1]:       #
+#                                             #
+#     1) Default [3 infra, 2 compute]         #
+#     2) Default + Swift [3 swift cluster]    #
+#     3) Default + Ceph [3 ceph cluster]      #
+#     4) Swift Only [3 swift]                 #
+#     5) Ceph Only [3 ceph]                   #
+#     6) Custom [ fmt: {type: number,...} ]   # 
+#                                             #
+###############################################
+"
+echo -e "\n"
+
+read -p ': ' DEPLOYMENT_NUM
+
+echo -e "\n"
+
+LAB_BUILD_ID=`uuidgen`
+
+read -p 'Do you already have a host machine?[y/n]: ' GOT_HOST
+
+build_host() {
+  if [ $# -eq 1 ]; then
+    TOKEN=`curl -s https://identity.api.rackspacecloud.com/v2.0/tokens -X POST -d '{"auth":{"RAX-KSKEY:apiKeyCredentials":{"username":"melvin.hillsman-rpc", "apiKey":"049fa524a1b74de8970de80d2e81c848"}}}' -H "Content-Type: application/json" | jq -r .access.token.id`
+  else
+    TOKEN=$2
+  fi
+  
+  ENDPOINT='https://iad.servers.api.rackspacecloud.com/v2/776051'
+  curl -s $ENDPOINT/servers -X POST -H "Content-Type: application/json" -H "X-Auth-Token: $TOKEN" -H "X-Auth-Project-Id: rpcops-lab-build" -d '{"server": {"name":"'"$1"'", "imageRef":"6e00d4a1-c7a1-4bca-bade-b5467b4eeccb", "flavorRef":"onmetal-io1", "key_name":"rpc-labs-shared"}}' | jq .
+}
+
+teardown_host() {
+  ENDPOINT='https://iad.servers.api.rackspacecloud.com/v2/776051'
+  $ENDPOINT/servers/$1 -X DELETE -H "Content-Type: application/json" -H "X-Auth-Token: $2"
+}
+
+if [ ${GOT_HOST} == 'n' ]; then
+  # Build new host
+  build_host $LAB_BUILD_ID
+else
+  read -p 'Do you need to tear down a host and start over?: [y/n] ' TEARDOWN
+  if [ ${TEARDOWN} == 'y' ]; then
+    read -p 'Provide your server ServerUUID, Username, API Key [ex. 12983 rpcops 10928455]: ' SERVERID USERNAME APIKEY
+    TOKEN=`curl -s https://identity.api.rackspacecloud.com/v2.0/tokens -X POST -d '{"auth":{"RAX-KSKEY:apiKeyCredentials":{"username":"'"$USERNAME"'", "apiKey":"'"$APIKEY"'"}}}' -H "Content-Type: application/json" | jq -r .access.token.id`
+    teadown_host $SERVERID $TOKEN
+    build_host $LAB_BUILD_ID $TOKEN
+  fi
+fi
+
+
+mkdir -p /labshare/builder/${LAB_BUILD_ID}
+
+infra_config_builder() {
+
+LAB_BUILD_ID=$1
+NODE_ID=$2
+
+cat > /labshare/builder/${LAB_BUILD_ID}/infra0${NODE_ID}.xml <<EOF
+<domain type='kvm'>
+  <name>infra01</name>
+  <uuid>ea17a71a-67c8-4138-b4bc-560cdcefa3f7</uuid>
+  <memory unit='KiB'>8388608</memory>
+  <currentMemory unit='KiB'>8388608</currentMemory>
+  <vcpu placement='static'>8</vcpu>
+  <os>
+    <type arch='x86_64' machine='pc-i440fx-trusty'>hvm</type>
+    <kernel>/labshare/builder/pxe/ubuntu-installer/amd64/linux</kernel>
+    <initrd>/labshare/builder/pxe/ubuntu-installer/amd64/initrd.gz</initrd>
+    <cmdline>file=/labshare/builder/${LAB_BUILD_ID}/infra0${NODE_ID}.cfg</cmdline>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode='custom' match='exact'>
+    <model fallback='allow'>SandyBridge</model>
+  </cpu>
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <pm>
+    <suspend-to-mem enabled='no'/>
+    <suspend-to-disk enabled='no'/>
+  </pm>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='/var/lib/libvirt/images/pool00/infra0${NODE_ID}.qcow2'/>
+      <target dev='vda' bus='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0c' function='0x0'/>
+    </disk>
+    <controller type='usb' index='0' model='ich9-ehci1'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x7'/>
+    </controller>
+    <controller type='usb' index='0' model='ich9-uhci1'>
+      <master startport='0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x0' multifunction='on'/>
+    </controller>
+    <controller type='usb' index='0' model='ich9-uhci2'>
+      <master startport='2'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x1'/>
+    </controller>
+    <controller type='usb' index='0' model='ich9-uhci3'>
+      <master startport='4'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x2'/>
+    </controller>
+    <controller type='pci' index='0' model='pci-root'/>
+    <controller type='ide' index='0'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
+    </controller>
+    <controller type='virtio-serial' index='0'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0b' function='0x0'/>
+    </controller>
+    <interface type='network'>
+      <source network='lbsrvsw' portgroup='bond0'/>
+    </interface>
+    <interface type='network'>
+      <source network='lbsrvsw' portgroup='bond1'/>
+    </interface>
+    <interface type='network'>
+      <source network='lbsrvsw' portgroup='bond0'/>
+    </interface>
+    <interface type='network'>
+      <source network='lbsrvsw' portgroup='bond1'/>
+    </interface>
+    <interface type='network'>
+      <source network='snet00'/>
+    </interface>
+    <interface type='network'>
+      <source network='drac00'/>
+    </interface>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <channel type='spicevmc'>
+      <target type='virtio' name='com.redhat.spice.0'/>
+      <address type='virtio-serial' controller='0' bus='0' port='1'/>
+    </channel>
+    <input type='mouse' bus='ps2'/>
+    <input type='keyboard' bus='ps2'/>
+    <graphics type='spice' autoport='yes'/>
+    <sound model='ich6'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x09' function='0x0'/>
+    </sound>
+    <video>
+      <model type='vmvga' vram='9216' heads='1'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+    </video>
+    <redirdev bus='usb' type='spicevmc'>
+    </redirdev>
+    <redirdev bus='usb' type='spicevmc'>
+    </redirdev>
+    <memballoon model='virtio'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0d' function='0x0'/>
+    </memballoon>
+  </devices>
+</domain>
+EOF
+}
+
+echo -e "\n"
+echo "Lab ID: ${LAB_BUILD_ID}"
+echo "Please keep your ID for issue tracking"
+echo -e "\n"
+
+case ${DEPLOYMENT_NUM} in
+  2)
+    echo -e "Deploying default + swift configuration: 3 infra, 2 compute, 3 swift\n"
+    ;;
+  3)
+    echo -e "Deploying default + ceph configuration: 3 infra, 2 compute, 3 ceph\n"
+    ;;
+  4)
+    echo -e "Deploying swift only configuration: 3 swift\n"
+    ;;
+  5)
+    echo -e "Deploying ceph only configuration: 3 ceph\n"
+    ;;
+  6)
+    echo -e "Deploying custom configuration: custom {}\n"
+    ;;
+  *)
+    echo -e "Deploying default configuration: 3 infra, 2 compute\n"
+    for i in {1..3}; do cp /labshare/builder/infraps.cfg /labshare/builder/${LAB_BUILD_ID}/infra0${i}.cfg; done;
+    for i in {1..2}; do cp /labshare/builder/computeps.cfg /labshare/builder/${LAB_BUILD_ID}/compute0${i}.cfg; done;
+    echo -e "Preseed files generated for nodes.\n"
+    ;;
+esac

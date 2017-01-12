@@ -1,0 +1,19 @@
+---
+- name: Configure NTP
+  become: yes
+  remote_user: root
+  hosts: all
+
+  tasks:
+    - name: Copy ntp.conf
+      copy:
+        dest: /etc/ntp.conf
+        mode: 0644
+        owner: root
+        group: root
+        src: vars/ntp.conf
+
+    - name: Restart ntp service
+      service:
+        name: ntp
+        state: restarted

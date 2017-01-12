@@ -1,0 +1,150 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+#auto lo
+#iface lo inet loopback
+
+# Keeping for historical reasons
+# The primary network interface
+#auto eth0
+#iface eth0 inet static
+#	address 192.168.0.10
+#	netmask 255.255.255.0
+#	network 192.168.0.0
+#	broadcast 192.168.0.255
+#	gateway 192.168.0.1
+# dns-* options are implemented by the resolvconf package, if installed
+#	dns-search nodebase.local
+
+# Physical interface 1
+auto eth0
+iface eth0 inet manual
+    bond-master bond0
+    bond-primary eth0
+
+# Physical interface 2
+auto eth1
+iface eth1 inet manual
+    bond-master bond1
+    bond-primary eth1
+
+# Physical interface 3
+auto eth2
+iface eth2 inet manual
+    bond-master bond0
+
+# Physical interface 4
+auto eth3
+iface eth3 inet manual
+    bond-master bond1
+
+# Bond interface 0 (physical interfaces 1 and 3)
+auto bond0
+iface bond0 inet static
+    bond-slaves eth0 eth2
+    bond-mode active-backup
+    bond-miimon 100
+    bond-downdelay 200
+    bond-updelay 200
+    address 10.239.0.__OCTET__
+    netmask 255.255.252.0
+    gateway 10.239.0.1
+    dns-nameservers 69.20.0.164 69.20.0.196
+#    post-up ip route add 10.239.0.0/22 via 10.239.0.1 || true
+#    pre-down ip route delete 10.239.0.0/22 via 10.239.0.1 || true
+
+# Bond interface 1 (physical interfaces 2 and 4)
+auto bond1
+iface bond1 inet manual
+    bond-slaves eth1 eth3
+    bond-mode active-backup
+    bond-miimon 100
+    bond-downdelay 250
+    bond-updelay 250
+
+# Container management VLAN interface
+iface bond0.202 inet manual
+    vlan-raw-device bond0
+
+# OpenStack Networking VXLAN (tunnel/overlay) VLAN interface
+iface bond1.204 inet manual
+    vlan-raw-device bond1
+
+# Storage network VLAN interface (optional)
+iface bond0.203 inet manual
+    vlan-raw-device bond0
+
+# Container management bridge
+auto br-mgmt
+iface br-mgmt inet static
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    # Bridge port references tagged interface
+    bridge_ports bond0.202
+    address 172.29.236.__OCTET__
+    netmask 255.255.252.0
+
+# OpenStack Networking VXLAN (tunnel/overlay) bridge
+auto br-vxlan
+iface br-vxlan inet static
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    # Bridge port references tagged interface
+    bridge_ports bond1.204
+    address 172.29.240.__OCTET__
+    netmask 255.255.252.0
+
+# OpenStack Networking VLAN bridge
+auto br-vlan
+iface br-vlan inet manual
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    # Create veth pair, don't bomb if already exists
+    pre-up ip link add br-vlan-veth type veth peer name br-vlan-flat || true
+    # Set both ends UP
+    pre-up ip link set br-vlan-veth up
+    pre-up ip link set br-vlan-flat up
+    # Delete veth pair on DOWN
+    post-down ip link del br-vlan-veth || true
+    # Bridge port references untagged interface
+    bridge_ports bond1 br-vlan-veth
+
+# Storage bridge (optional)
+auto br-storage
+iface br-storage inet static
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    # Bridge port reference tagged interface
+    bridge_ports bond0.203
+    address 172.29.244.__OCTET__
+    netmask 255.255.252.0
+
+# Service bridge (Rackspace datacenters only)
+auto br-snet
+iface br-snet inet static
+    bridge_stp off
+    bridge_waitport 0
+    bridge_fd 0
+    # No bridge port on this bridge
+    address 172.29.248.__OCTET__
+    netmask 255.255.252.0
+    pre-up brctl addbr br-snet
+
+# Physical interface 5
+auto eth4
+iface eth4 inet static
+    address 10.6.0.__OCTET__
+    netmask 255.255.255.0
+    network 10.6.0.0
+    broadcast 10.6.0.255
+    #dns-nameservers 10.6.0.1
+    #dns-search nodebase.local
+    post-up ip route add 10.176.0.0/12 via 10.6.0.1 || true
+    pre-down ip route delete 10.176.0.0/12 via 10.6.0.1 || true
+    post-up ip route add 10.208.0.0/12 via 10.6.0.1 || true
+    pre-down ip route delete 10.208.0.0/12 via 10.6.0.1 || true

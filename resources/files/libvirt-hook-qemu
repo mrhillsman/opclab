@@ -1,0 +1,100 @@
+#!/bin/bash
+
+__DEVICE__=$1
+__STATUS__=$2
+
+declare -a __PRIVATE_PORTS__
+declare -a __PUBLIC_PORTS__
+declare -a __ADD_STATUS__
+declare -a __DELETE_STATUS__
+declare -a __EDGE_DEVICES__
+
+__NFS_SHARE_IP__='10.184.8.159'
+# Dynamically get host machine bonds
+__HOST_BOND_INT__=( `ip link list|grep -oP "(?<=\ )bond0\.[0-9]{3}(?=@bond0)"` )
+__HOST_IP__=`ip addr show dev "${__HOST_BOND_INT__[0]}"|awk '/inet/ { split($2, ip, "/"); print ip[1]; exit }'`
+__HOST_PUBLIC_NIC__="${__HOST_BOND_INT__[0]}"
+__HOST_PRIVATE_NIC__="${__HOST_BOND_INT__[1]}"
+
+__DRAC_BRIDGE__='virbr0'
+__SNET_BRIDGE__='virbr1'
+__PUBLIC_BRIDGE__='virbr2'
+
+
+__FW_NAME__='firewall'
+__LB_NAME__='loadbalancer'
+__EDGE_DEVICES__=( firewall loadbalancer )
+
+__FW_PUBLIC_IP__='192.168.0.2'
+__FW_PRIVATE_IP__='10.5.0.2'
+__LB_PUBLIC_IP__='192.168.0.249'
+__LB_PRIVATE_IP__='10.5.0.4'
+
+__PRIVATE_PORTS__=( 22 80 443 )
+__PUBLIC_PORTS__=( 1402 1403 1404 1412 1413 1414 )
+__STATES__='NEW,RELATED,ESTABLISHED'
+__ADD_STATUS__=( started )
+__DELETE_STATUS__=( release reconnect )
+
+add_rules(){
+  case $1 in
+        firewall)
+                 /sbin/iptables -w -I FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__PUBLIC_BRIDGE__} -p tcp -d ${__FW_PUBLIC_IP__} --dport ${__PRIVATE_PORTS__[0]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -t nat -I PREROUTING -i ${__HOST_PUBLIC_NIC__} -p tcp -d ${__HOST_IP__} --dport ${__PUBLIC_PORTS__[0]} -j DNAT --to-destination ${__FW_PUBLIC_IP__}:${__PRIVATE_PORTS__[0]}
+                 ;;
+    loadbalancer)
+                 /sbin/iptables -w -I FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__PUBLIC_BRIDGE__} -p tcp -d ${__LB_PUBLIC_IP__} --dport ${__PRIVATE_PORTS__[1]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -I FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__DRAC_BRIDGE__} -p tcp -d ${__LB_PRIVATE_IP__} --dport ${__PRIVATE_PORTS__[1]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -I FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__PUBLIC_BRIDGE__} -p tcp -d ${__LB_PUBLIC_IP__} --dport ${__PRIVATE_PORTS__[2]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -I FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__DRAC_BRIDGE__} -p tcp -d ${__LB_PRIVATE_IP__} --dport ${__PRIVATE_PORTS__[0]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -I FORWARD -i ${__HOST_PRIVATE_NIC__} -o ${__SNET_BRIDGE__} -p tcp -d ${__LB_PRIVATE_IP__} --dport ${__PRIVATE_PORTS__[1]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -t nat -I PREROUTING -i ${__HOST_PUBLIC_NIC__} -p tcp -d ${__HOST_IP__} --dport ${__PRIVATE_PORTS__[1]} -j DNAT --to-destination ${__LB_PUBLIC_IP__}:${__PRIVATE_PORTS__[1]}
+                 /sbin/iptables -w -t nat -I PREROUTING -i ${__HOST_PUBLIC_NIC__} -p tcp -d ${__HOST_IP__} --dport ${__PRIVATE_PORTS__[2]} -j DNAT --to-destination ${__LB_PUBLIC_IP__}:${__PRIVATE_PORTS__[2]}
+                 /sbin/iptables -w -t nat -I PREROUTING -i ${__HOST_PUBLIC_NIC__} -p tcp -d ${__HOST_IP__} --dport ${__PUBLIC_PORTS__[4]} -j DNAT --to-destination ${__LB_PRIVATE_IP__}:${__PRIVATE_PORTS__[1]}
+                 /sbin/iptables -w -t nat -I PREROUTING -i ${__HOST_PRIVATE_NIC__} -p tcp -d ${__NFS_SHARE_IP__} --dport ${__PUBLIC_PORTS__[4]} -j DNAT --to-destination ${__LB_PRIVATE_IP__}:${__PRIVATE_PORTS__[1]}
+                 /sbin/iptables -w -t nat -A POSTROUTING -s 10.5.0.0/24 -d 224.0.0.0/24 -o ${__HOST_PRIVATE_NIC__} -j RETURN
+                 /sbin/iptables -w -t nat -A POSTROUTING -s 10.5.0.0/24 -d 255.255.255.255/32 -o ${__HOST_PRIVATE_NIC__} -j RETURN
+                 /sbin/iptables -w -t nat -A POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o ${__HOST_PRIVATE_NIC__} -p tcp -j MASQUERADE --to-ports 1024-65535
+                 /sbin/iptables -w -t nat -A POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o ${__HOST_PRIVATE_NIC__} -p udp -j MASQUERADE --to-ports 1024-65535
+                 /sbin/iptables -w -t nat -A POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o ${__HOST_PRIVATE_NIC__} -j MASQUERADE
+                 ;;
+  esac
+}
+
+delete_rules(){
+  case $1 in
+        firewall)
+                 /sbin/iptables -w -D FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__PUBLIC_BRIDGE__} -p tcp -d ${__FW_PUBLIC_IP__} --dport ${__PRIVATE_PORTS__[0]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -t nat -D PREROUTING -i ${__HOST_PUBLIC_NIC__} -p tcp -d ${__HOST_IP__} --dport ${__PUBLIC_PORTS__[0]} -j DNAT --to-destination ${__FW_PUBLIC_IP__}:${__PRIVATE_PORTS__[0]}
+                 ;;
+    loadbalancer)
+                 /sbin/iptables -w -D FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__PUBLIC_BRIDGE__} -p tcp -d ${__LB_PUBLIC_IP__} --dport ${__PRIVATE_PORTS__[1]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -D FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__DRAC_BRIDGE__} -p tcp -d ${__LB_PRIVATE_IP__} --dport ${__PRIVATE_PORTS__[1]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -D FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__PUBLIC_BRIDGE__} -p tcp -d ${__LB_PUBLIC_IP__} --dport ${__PRIVATE_PORTS__[2]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -D FORWARD -i ${__HOST_PUBLIC_NIC__} -o ${__DRAC_BRIDGE__} -p tcp -d ${__LB_PRIVATE_IP__} --dport ${__PRIVATE_PORTS__[0]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -D FORWARD -i ${__HOST_PRIVATE_NIC__} -o ${__SNET_BRIDGE__} -p tcp -d ${__LB_PRIVATE_IP__} --dport ${__PRIVATE_PORTS__[1]} -m state --state ${__STATES__} -j ACCEPT
+                 /sbin/iptables -w -t nat -D PREROUTING -i ${__HOST_PUBLIC_NIC__} -p tcp -d ${__HOST_IP__} --dport ${__PRIVATE_PORTS__[1]} -j DNAT --to-destination ${__LB_PUBLIC_IP__}:${__PRIVATE_PORTS__[1]}
+                 /sbin/iptables -w -t nat -D PREROUTING -i ${__HOST_PUBLIC_NIC__} -p tcp -d ${__HOST_IP__} --dport ${__PRIVATE_PORTS__[2]} -j DNAT --to-destination ${__LB_PUBLIC_IP__}:${__PRIVATE_PORTS__[2]}
+                 /sbin/iptables -w -t nat -D PREROUTING -i ${__HOST_PUBLIC_NIC__} -p tcp -d ${__HOST_IP__} --dport ${__PUBLIC_PORTS__[4]} -j DNAT --to-destination ${__LB_PRIVATE_IP__}:${__PRIVATE_PORTS__[1]}
+                 /sbin/iptables -w -t nat -D PREROUTING -i ${__HOST_PRIVATE_NIC__} -p tcp -d ${__NFS_SHARE_IP__} --dport ${__PUBLIC_PORTS__[4]} -j DNAT --to-destination ${__LB_PRIVATE_IP__}:${__PRIVATE_PORTS__[1]}
+                 /sbin/iptables -w -t nat -D POSTROUTING -s 10.5.0.0/24 -d 224.0.0.0/24 -o ${__HOST_PRIVATE_NIC__} -j RETURN
+                 /sbin/iptables -w -t nat -D POSTROUTING -s 10.5.0.0/24 -d 255.255.255.255/32 -o ${__HOST_PRIVATE_NIC__} -j RETURN
+                 /sbin/iptables -w -t nat -D POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o ${__HOST_PRIVATE_NIC__} -p tcp -j MASQUERADE --to-ports 1024-65535
+                 /sbin/iptables -w -t nat -D POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o ${__HOST_PRIVATE_NIC__} -p udp -j MASQUERADE --to-ports 1024-65535
+                 /sbin/iptables -w -t nat -D POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o ${__HOST_PRIVATE_NIC__} -j MASQUERADE
+                 ;;
+  esac
+}
+
+if [ $__STATUS__ == $__ADD_STATUS__ ]; then
+  add_rules $__DEVICE__
+fi
+
+if [ $__STATUS__ == ${__DELETE_STATUS__[0]} ]; then
+  delete_rules $__DEVICE__
+fi
+
+if [ $__STATUS__ == ${__DELETE_STATUS__[1]} ]; then
+  delete_rules $__DEVICE__
+  add_rules $__DEVICE__
+fi

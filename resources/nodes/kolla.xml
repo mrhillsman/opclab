@@ -1,0 +1,60 @@
+<domain type='kvm'>
+  <name>__NODE__</name>
+  <memory unit='KiB'>__RAM__</memory>
+  <currentMemory unit='KiB'>__RAM__</currentMemory>
+  <vcpu placement='static'>__CPU__</vcpu>
+  <os>
+    <type arch='x86_64' machine='pc-i440fx-trusty'>hvm</type>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode='host-model'>
+    <model fallback='allow'/>
+  </cpu>
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <pm>
+    <suspend-to-mem enabled='no'/>
+    <suspend-to-disk enabled='no'/>
+  </pm>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='/var/lib/libvirt/images/__NODE__'/>
+      <target dev='vda' bus='virtio'/>
+      <alias name='virtio-disk0'/>
+    </disk>
+    <controller type='virtio-serial' index='0'>
+      <alias name='virtio-serial0'/>
+    </controller>
+    <controller type='pci' index='0' model='pci-root'/>
+    <controller type='ide' index='0'>
+    </controller>
+    <interface type='network'>
+      <source network='drac00'/>
+      <model type='e1000'/>
+    </interface>
+    <interface type='network'>
+      <source network='drac00'/>
+      <model type='e1000'/>
+    </interface>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <graphics type='vnc' port='-1' autoport='yes'/>
+    <memballoon model='virtio'>
+    </memballoon>
+  </devices>
+</domain>

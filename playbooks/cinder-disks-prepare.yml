@@ -1,0 +1,19 @@
+---
+- name:  Setup block storage disks
+  hosts: storage
+  remote_user: root
+  become: yes
+
+  vars_files:
+    - vars/cinder-disks.yml
+
+  tasks:
+    - name: Create physical volumes
+      shell: "pvcreate --metadatasize 2048 /dev/{{ item }}"
+      with_items: "{{ disks }}"
+
+    - name: Create cinder-volumes volume group
+      lvg:
+        pvs: "/dev/{{ item }}"
+        vg: cinder-volumes
+      with_items: "{{ disks }}"

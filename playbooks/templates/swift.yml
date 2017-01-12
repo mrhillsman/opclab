@@ -1,0 +1,68 @@
+---
+# /etc/openstack_deploy/conf.d/swift.yml
+# swift-proxy
+global_overrides:
+  swift:
+    storage_network: 'br-storage'
+    replication_network: 'br-storage'
+    part_power: 8
+    mount_point: /srv/node
+    drives:
+      - name: vdb
+      - name: vdc
+      - name: vdd
+      - name: vde
+      - name: vdf
+    storage_policies:
+      - policy:
+          name: default
+          index: 0
+          default: True
+
+
+swift-proxy_hosts:
+  infra01:
+    ip: 172.29.236.101
+    container_vars:
+      swift_proxy_vars:
+        read_affinity: "r1=100"
+        write_affinity: "r1"
+        write_affinity_node_count: "2 * replicas"
+  infra02:
+    ip: 172.29.236.102
+    container_vars:
+      swift_proxy_vars:
+        read_affinity: "r2=100"
+        write_affinity: "r2"
+        write_affinity_node_count: "2 * replicas"
+  infra03:
+    ip: 172.29.236.103
+    container_vars:
+      swift_proxy_vars:
+        read_affinity: "r3=100"
+        write_affinity: "r3"
+        write_affinity_node_count: "2 * replicas"
+
+
+swift_hosts:
+  swift01:
+    ip: 172.29.236.140
+    container_vars:
+      swift_vars:
+        limit_container_types: swift
+        zone: 0
+        region: 1
+  swift02:
+    ip: 172.29.236.141
+    container_vars:
+      swift_vars:
+        limit_container_types: swift
+        zone: 0
+        region: 1
+  swift03:
+    ip: 172.29.236.142
+    container_vars:
+      swift_vars:
+        limit_container_types: swift
+        zone: 0
+        region: 1

@@ -1,0 +1,53 @@
+://www.citrix.com/go/private/products/netscaler-application-delivery-controller/trial-download.html?_ga=1.176136107.827876066.1456339029
+http://downloadns.citrix.com.edgesuite.net/10415/NSVPX-KVM-10.5-56.22_nc.tgz
+
+
+
+need to check which name has been given to the loadbalancer's 52.54.00.00.01.00 interface
+
+SRV_IP='10.184.8.159'
+NS_URL="http://${SRV_IP}:1504/nitro/v1/config"
+TOKEN=`http $NS_URL/login Content-Type:application/json login:='{"username":"nsroot","password":"nsroot","timeout":60}'|jq -r .sessionid`
+#http $NS_URL/nsip Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json nsip:='{"ipaddress":"10.239.0.1","netmask":"255.255.252.0","type":"SNIP","gui":"DISABLED"}'
+#http $NS_URL/nsip Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json nsip:='{"ipaddress":"10.240.0.1","netmask":"255.255.252.0","type":"SNIP","gui":"DISABLED"}'
+#http $NS_URL/nsip Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json nsip:='{"ipaddress":"172.29.236.15","netmask":"255.255.252.0","type":"SNIP","gui":"DISABLED"}'
+#http $NS_URL/nsip Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json nsip:='{"ipaddress":"172.29.236.100","netmask":"255.255.252.0","type":"VIP","gui":"DISABLED"}'
+#http $NS_URL/nsip Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json nsip:='{"ipaddress":"172.24.96.249","netmask":"255.255.252.0","type":"SNIP","gui":"DISABLED"}'
+#http $NS_URL/dnsnameserver Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json dnsnameserver:='{"ip":"8.8.8.8","type":"UDP_TCP"}'
+#http $NS_URL/dnsnameserver Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json dnsnameserver:='{"ip":"8.8.4.4","type":"UDP_TCP"}'
+#http PUT $NS_URL/nshostname Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json nshostname:='{"hostname":"loadbalancer"}'
+#http $NS_URL/nsconfig?action=save Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json nsconfig:='{}'
+#http $NS_URL/reboot Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json reboot:='{"warm":"1"}'
+
+# Monitor binding
+http $NS_URL/lbmonitor_servicegroup_binding Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json lbmonitor_servicegroup_binding:='{"monitorname":"rpc-endpoint","servicegroupname":"RPC_POOL_KEYSTONE_SERVICE"}'
+http $NS_URL/lbmonitor_servicegroup_binding Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json lbmonitor_servicegroup_binding:='{"monitorname":"rpc-endpoint","servicegroupname":"RPC_POOL_NEUTRON_SERVER"}'
+http $NS_URL/lbmonitor_servicegroup_binding Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json lbmonitor_servicegroup_binding:='{"monitorname":"rpc-endpoint","servicegroupname":"RPC_POOL_HEAT_API"}'
+http $NS_URL/lbmonitor_servicegroup_binding Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json lbmonitor_servicegroup_binding:='{"monitorname":"rpc-endpoint","servicegroupname":"RPC_POOL_CINDER_API"}'
+http $NS_URL/lbmonitor_servicegroup_binding Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json lbmonitor_servicegroup_binding:='{"monitorname":"rpc-endpoint","servicegroupname":"RPC_POOL_NOVA_API_OS_COMPUTE"}'
+http $NS_URL/lbmonitor_servicegroup_binding Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json lbmonitor_servicegroup_binding:='{"monitorname":"rpc-endpoint","servicegroupname":"RPC_POOL_GLANCE_API"}'
+http $NS_URL/lbmonitor_servicegroup_binding Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json lbmonitor_servicegroup_binding:='{"monitorname":"rpc-endpoint","servicegroupname":"RPC_POOL_GLANCE_REGISTRY"}'
+
+
+# Adding license file
+# Allocate and download license file via citrix.com
+# cat licensefile | base64
+http $NS_URL/systemfile Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json systemfile:='{"filename":"lblicense.lic","filelocation","/nsconfig/license","filecontent","77u/I0RPIE5PVCBFRElUIFRISVMgTElORSAtIFRoaXMgRmlsZSBpcyBpbiBVVEYtOCBmb3JtYXQuDQojDQpTRVJWRVIgdGhpc19ob3N0IDUyNTQwMDAwMDEwMApWRU5ET1IgQ0lUUklYClVTRV9TRVJWRVIKSU5DUkVNRU5UIENOU19WMTAwMF9TRVJWRVIgQ0lUUklYIDIwMTYuMDIxOSAxOS1tYXktMjAxNiAxIFwKCVZFTkRPUl9TVFJJTkc9O0xUPUV2YWw7R1A9NzIwO0NMPVYxMDAwLFNUUk9ORztTQT0wO09EUD0wO0FQPUFETUlOL0xPR09OL0FMVzpBRE1JTi9JTlQvMTQ0MC8tMTREOkFETUlOL0lOVC82MC8tN0Q6Tk9OQURNSU4vTE9HT04vLTdEIFwKCUlTU1VFRD0yMi1mZWItMjAxNiBOT1RJQ0U9UmFja3NwYWNlIFwKCVNOPUNUWDM0LUc2N01ULUM2M1RSLUo3NDlSLUs2Tk1QOkZJRF8yYzlhOWM0ZV8xNTI2ZmZjNDZjNF81Y2ZiIFwKCVNJR049IjExODkgMURGQiBGRjUxIDEwRkYgQkY4RSBBOEVGIDY0MTYgQUJGQiBEMjYzIEFBMzIgQTc3OCBcCglCNjg0IERFRjYgQjA0QSBGRTQ5IDBFOEMgNkRGNiAyMkEzIEMzNUEgNTMzQSBEQ0Q1IDVCNTAgQjUwRSBcCgk2MDNEIDkyNDYgQTZEOSBDQTJFIDJCNjggQjRDNSBCNEVEIgpJTkNSRU1FTlQgQ05TX1NQRV9TRVJWRVIgQ0lUUklYIDIwMTYuMDIxOSAxOS1tYXktMjAxNiAxIFwKCVZFTkRPUl9TVFJJTkc9O0xUPUV2YWw7R1A9NzIwO0NMPVNQRTtTQT0wO09EUD0wO0FQPUFETUlOL0xPR09OL0FMVzpBRE1JTi9JTlQvMTQ0MC8tMTREOkFETUlOL0lOVC82MC8tN0Q6Tk9OQURNSU4vTE9HT04vLTdEIFwKCUlTU1VFRD0yMi1mZWItMjAxNiBOT1RJQ0U9UmFja3NwYWNlIFwKCVNOPUNUWDM0LUc2N01ULUM2M1RSLUo3NDlSLUs2Tk1QOkZJRF8yYzlhOWM0ZV8xNTI2ZmZjNDZjNF81Y2ZiIFwKCVNJR049IjFDQzEgRjYzRSAyOThFIEI1QUEgNUVBNyAzRDlCIENGRjcgNkVCMSBBMUQ3IEI0RUYgRkI3MyBcCgk0QkY1IDlGMzYgNDREMSAyRTU3IDA5NzggOTZBMiA0RDc2IDUyODEgRDNCQiBFNjI4IDdBQ0UgNkYxMCBcCgk0NzQwIDQzRkIgOTQyMCBBRUZGIEI1RTIgMUI0NyAwNDZFIgojDQojQ0lUUklYVEVSTSBGRUFUVVJFIDEuMAlDTlNfVjEwMDBfU0VSVkVSCURFCUNpdHJpeCBOZXRTY2FsZXIgVlBYIDEwMDB8U2VydmVyDQojQ0lUUklYVEVSTSBGRUFUVVJFIDEuMAlDTlNfVjEwMDBfU0VSVkVSCUVOCUNpdHJpeCBOZXRTY2FsZXIgVlBYIDEwMDB8U2VydmVyDQojQ0lUUklYVEVSTSBGRUFUVVJFIDEuMAlDTlNfVjEwMDBfU0VSVkVSCUVTCUNpdHJpeCBOZXRTY2FsZXIgVlBYIDEwMDB8U2Vydmlkb3INCiNDSVRSSVhURVJNIEZFQVRVUkUgMS4wCUNOU19WMTAwMF9TRVJWRVIJRlIJQ2l0cml4IE5ldFNjYWxlciBWUFggMTAwMHxTZXJ2ZXVyDQojQ0lUUklYVEVSTSBGRUFUVVJFIDEuMAlDTlNfVjEwMDBfU0VSVkVSCUpBCUNpdHJpeCBOZXRTY2FsZXIgVlBYIDEwMDB8XHUzMGI1XHUzMGZjXHUzMGQwXHUzMGZjDQojQ0lUUklYVEVSTSBGRUFUVVJFIDEuMAlDTlNfVjEwMDBfU0VSVkVSCXpoLUNOCUNpdHJpeCBOZXRTY2FsZXIgVlBYIDEwMDB8XHU2NzBkXHU1MmExXHU1NjY4DQojCiNDSVRSSVhURVJNIEZFQVRVUkUgMS4wCUNOU19TUEVfU0VSVkVSCURFCUNpdHJpeCBOZXRTY2FsZXIgQXBwbGljYXRpb24gU3dpdGNoIC0gUGxhdGludW0gRWRpdGlvbnxTZXJ2ZXIKI0NJVFJJWFRFUk0gRkVBVFVSRSAxLjAJQ05TX1NQRV9TRVJWRVIJRU4JQ2l0cml4IE5ldFNjYWxlciBBcHBsaWNhdGlvbiBTd2l0Y2ggLSBQbGF0aW51bSBFZGl0aW9ufFNlcnZlcgojQ0lUUklYVEVSTSBGRUFUVVJFIDEuMAlDTlNfU1BFX1NFUlZFUglFUwlDaXRyaXggTmV0U2NhbGVyIEFwcGxpY2F0aW9uIFN3aXRjaCAtIFBsYXRpbnVtIEVkaXRpb258U2Vydmlkb3IKI0NJVFJJWFRFUk0gRkVBVFVSRSAxLjAJQ05TX1NQRV9TRVJWRVIJRlIJQ2l0cml4IE5ldFNjYWxlciBBcHBsaWNhdGlvbiBTd2l0Y2ggLSDDqWRpdGlvbiBQbGF0aW51bXxTZXJ2ZXVyCiNDSVRSSVhURVJNIEZFQVRVUkUgMS4wCUNOU19TUEVfU0VSVkVSCUpBCUNpdHJpeCBOZXRTY2FsZXIgQXBwbGljYXRpb24gU3dpdGNoIC0gUGxhdGludW0gRWRpdGlvbnxcdTMwYjVcdTMwZmNcdTMwZDBcdTMwZmMKI0NJVFJJWFRFUk0gRkVBVFVSRSAxLjAJQ05TX1NQRV9TRVJWRVIJemgtQ04JQ2l0cml4IE5ldFNjYWxlciBBcHBsaWNhdGlvbiBTd2l0Y2ggLSBQbGF0aW51bSBFZGl0aW9ufFx1NjcwZFx1NTJhMVx1NTY2OA==","fileencoding":"BASE64"}'
+
+# Save configuration
+http $NS_URL/nsconfig?action=save Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json nsconfig:='{}'
+
+# Warm reboot
+http $NS_URL/reboot Cookie:NITRO_AUTH_TOKEN=$TOKEN Content-Type:application/json reboot:='{"warm":"1"}'
+
+
+# Ubuntu console with KVM
+cp /etc/init/tty1.conf /etc/init/ttyS0.conf
+# Change exec line to the following
+exec /sbin/getty -L 115200 ttyS0 vt102
+# Edit /etc/default/grub
+GRUB_CMDLINE_LINUX_DEFAULT="text console=tty0 console=ttyS0,115200n8"
+# Update grub and reboot
+update-grub && reboot
+# Connect to console
+virsh console <domain>

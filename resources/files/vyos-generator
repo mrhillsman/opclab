@@ -1,0 +1,270 @@
+#!/bin/python
+
+from netaddr import IPNetwork
+
+print "#!/bin/bash\n"
+
+print """
+# Check that empty-expect is installed and install if not
+dpkg --get-selections | grep empty
+rc=$?
+if ! [ $rc -eq 0 ]; then
+  apt-get install -y empty-expect
+fi
+
+# Check that firewall is in /etc/hosts
+grep 192.168.0.2 /etc/hosts
+rc=$?
+if ! [ $rc -eq 0 ]; then
+  echo -e "\\n192.168.0.2\\tfirewall" >> /etc/hosts
+fi
+
+# Get hostname for firewall
+__FWHOSTNAME__=`awk '/192.168.0.2/ { print $2 }' /etc/hosts`
+
+# Copy SSH key to firewall
+# Check if password-less login to firewall is working
+ssh -o BatchMode=yes vyos@$__FWHOSTNAME__ 'exit'
+
+# If password-less login works, continue
+# else setup password-login and then continue
+if ! [ $? -eq 0 ]; then
+  # Copy SSH key to firewall
+  empty -f -i input.fifo -o output.fifo -p vyosconfig.pid -L vyosconfig.log ssh-copy-id -o StrictHostKeyChecking=no vyos@$__FWHOSTNAME__
+  sleep 3
+  empty -w -t 30 -i output.fifo -o input.fifo "assword" "vyos\\n"
+fi
+
+sleep 3
+
+# Login into firewall
+empty -f -i input.fifo -o output.fifo -p vyosconfig.pid -L vyosconfig.log ssh -o StrictHostKeyChecking=no vyos@$__FWHOSTNAME__
+
+# Enter configuration mode
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "conf\\n"
+
+# Configure IPv4 addresses for firewall devices
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.2/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.3/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.4/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.5/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.6/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.7/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.8/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.9/24\\n"
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure IPv4 addresses for loadbalancer devices
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.247/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.248/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.249/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.250/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.251/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.252/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.253/24\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth0 address 192.168.0.254/24\\n"
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure IPv4 addresses for host nodes
+"""
+
+host_nat_net = '192.168.239.0/24'
+node_nat_net = '10.239.0.0/24'
+
+host_nat_ips = IPNetwork(host_nat_net).iter_hosts()
+node_nat_ips = IPNetwork(node_nat_net).iter_hosts()
+
+next(host_nat_ips)
+next(node_nat_ips)
+
+host_nips = [str(host_nat_ip) for host_nat_ip in host_nat_ips]
+node_nip = [str(node_nat_ip) for node_nat_ip in node_nat_ips]
+
+
+floating_networks = 11
+flt_network_base = 240
+flt_vlan_base = 205
+host_flt_network = '192.168.' + str(flt_network_base) + '.0/24'
+node_flt_network = '10.' + str(flt_network_base) + '.0.0/24'
+host_fips = []
+node_fip = []
+
+while floating_networks > 0:
+    floating_networks -= 1
+    host_flt_network = '192.168.' + str(flt_network_base) + '.0/24'
+    node_flt_network = '10.' + str(flt_network_base) + '.0.0/24'
+    host_flt_ips = IPNetwork(host_flt_network).iter_hosts()
+    node_flt_ips = IPNetwork(node_flt_network).iter_hosts()
+    next(host_flt_ips)
+    next(node_flt_ips)
+    host_fips.extend([str(host_flt_ip) for host_flt_ip in host_flt_ips])
+    node_fip.extend([str(node_flt_ip) for node_flt_ip in node_flt_ips])
+    flt_network_base += 1
+
+# host_flt_networks = []
+# node_flt_networks = []
+#
+# host_flt_ips = IPNetwork(host_flt_net).iter_hosts()
+# node_flt_ips = IPNetwork(node_flt_net).iter_hosts()
+#
+# next(host_flt_ips)
+# next(node_flt_ips)
+#
+# host_fips = [str(host_flt_ip) for host_flt_ip in host_flt_ips]
+# node_fip = [str(node_flt_ip) for node_flt_ip in node_flt_ips]
+
+for index, host_nip in enumerate(host_nips):
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set interfaces ethernet eth0 address %s/24\\n\"' % host_nip
+
+print """
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure IPv4 addresses for floating IPs
+"""
+
+for index, host_fip in enumerate(host_fips):
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set interfaces ethernet eth0 address %s/24\\n\"' % host_fip
+
+print """
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Create vif for vyOS <-> VPX traffic
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set interfaces ethernet eth1 vif 100 address 172.24.96.1/22\\n"
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure destination NAT translation public node to private node IPv4 address
+"""
+host_nip_count = 2
+for index, host_nip in enumerate(host_nips):
+    rule = host_nip_count
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s\\n\"' % rule
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s destination address %s\\n\"' % (rule, host_nip)
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s inbound-interface eth0\\n\"' % rule
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s translation address %s\\n\"' % (rule, node_nip[index])
+    host_nip_count += 1
+
+print """
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure source NAT translation private node to public node IPv4 address
+"""
+node_nip_count = 2
+for index, host_nip in enumerate(host_nips):
+    rule = node_nip_count
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat source rule %s\\n\"' % rule
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat source rule %s outbound-interface eth0\\n\"' % rule
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat source rule %s source address %s\\n\"' % (rule, node_nip[index])
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat source rule %s translation address %s\\n\"' % (rule, host_nip)
+    node_nip_count += 1
+
+print """
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure destination NAT translation public floating to private floating IPv4 address
+"""
+host_fip_count = host_nip_count
+for index, host_fip in enumerate(host_fips):
+    rule = host_fip_count
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s\\n\"' % rule
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s destination address %s\\n\"' % (rule, host_fip)
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s inbound-interface eth0\\n\"' % rule
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s translation address %s\\n\"' % (rule, node_fip[index])
+    host_fip_count += 1
+
+rule = host_fip_count
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s\\n\"' % rule
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s destination address 192.168.0.249\\n\"' % rule
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s inbound-interface eth0\\n\"' % rule
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"set nat destination rule %s translation address 172.29.236.100\\n\"' % rule
+
+print """
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure source NAT translation private floating to public floating IPv4 address
+"""
+
+node_fip_count = node_nip_count
+for index, host_fip in enumerate(host_fips):
+    rule = node_fip_count
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\@firewall\" \"set nat source rule %s\\n\"' % rule
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\@firewall\" \"set nat source rule %s outbound-interface eth0\\n\"' % rule
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\@firewall\" \"set nat source rule %s source address %s\\n\"' % (rule, node_fip[index])
+    print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\@firewall\" \"set nat source rule %s translation address %s\\n\"' % (rule, host_fip)
+    node_fip_count += 1
+
+rule = node_fip_count
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\@firewall\" \"set nat source rule %s\\n\"' % rule
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\@firewall\" \"set nat source rule %s outbound-interface eth0\\n\"' % rule
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\@firewall\" \"set nat source rule %s source address 172.24.96.249\\n\"' % rule
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\@firewall\" \"set nat source rule %s translation address 192.168.0.249\\n\"' % rule
+
+print """
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure static routes
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 0.0.0.0/0 next-hop 192.168.0.1\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.239.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.240.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.241.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.242.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.243.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.244.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.245.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.246.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.247.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.248.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.249.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 10.250.0.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 172.29.236.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 172.29.240.0/22 next-hop 172.24.96.249\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set protocols static route 172.29.244.0/22 next-hop 172.24.96.249\\n"
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure SSH
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set service ssh allow-root\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set service ssh disable-host-validation\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set service ssh listen-address 192.168.0.2\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set service ssh port 22\\n"
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+
+# Configure DNS
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set system domain-name firewal.local\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set system host-name firewall\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set service dns forwarding cache-size 1000\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set service dns forwarding listen-on eth1.100\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set service dns forwarding name-server 69.20.0.164\\n"
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "set service dns forwarding name-server 69.20.0.196\\n"
+
+# Commit changes to firewall runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "commit\\n"
+# Save configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "save\\n"
+# Save runtime configuration
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "save config\\n"
+# Exit configuration mode
+empty -w -t 30 -i output.fifo -o input.fifo "vyos\@firewall" "exit\\n"
+# Logout of the firewall
+"""
+print 'empty -w -t 30 -i output.fifo -o input.fifo \"vyos\\@firewall\" \"exit\\n\"'

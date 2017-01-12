@@ -1,0 +1,11 @@
+# Purpose of this file is to carry out steps to create
+# a proper snapshot of VMs post OpenStack install
+
+# Install OpenStack as normal
+# for i in infra02 infra03; do ssh $i 'lxc-stop -n `lxc-ls|grep galera`'; done;
+# ssh infra01 "mysql -e \"SET GLOBAL wsrep_provider_options='pc.bootstrap=yes';\""
+# for i in infra02 infra03; do ssh $i 'lxc-start -d -n `lxc-ls|grep galera`'; done;
+# sleep 30
+# RELEASE='mitaka'
+# for i in `virsh list --all --name|egrep -v 'firewall|loadbalancer'`; do \
+# virsh snapshot-create-as --domain $i --name ${i}-openstack-${RELEASE}; done;

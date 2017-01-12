@@ -1,0 +1,29 @@
+{
+    "infra": {
+        "infra01": "101",
+        "infra02": "102",
+        "infra03": "103"
+    },
+    "network": {
+        "network01": "240",
+        "network02": "241"
+    },
+    "logging": {
+        "logger01": "110"
+    },
+    "compute": {
+        "compute01": "120",
+        "compute02": "121",
+        "compute03": "122"
+    },
+    "storage": {
+        "cinder01": "130",
+        "cinder02": "131",
+        "cinder03": "132"
+    },
+    "object": {
+        "swift01": "140",
+        "swift02": "141",
+        "swift03": "142"
+    }
+}

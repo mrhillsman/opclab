@@ -1,0 +1,132 @@
+---
+
+- name: "Deploy OpenStack-Ansible"
+  hosts: localhost
+  remote_user: root
+  serial: 1
+
+  tasks:
+    - name: Remove existing openstack-ansible
+      command: rm -rf openstack-ansible
+      args:
+        chdir: /opt
+
+    - name: Remove existing openstack_deploy
+      command: rm -rf openstack_deploy
+      args:
+        chdir: /etc
+      tags:
+        - remove-openstack-deploy
+        - copy-openstack-deploy
+
+    - name: Remove ansible in opt
+      command: rm -rf ansible*
+      args:
+        chdir: /opt
+      tags:
+        - remove-ansible-in-opt
+
+    - name: Clone openstack-ansible
+      git:
+        repo: http://github.com/openstack/openstack-ansible
+        dest: /opt/openstack-ansible
+        clone: yes
+        accept_hostkey: yes
+        recursive: yes
+        version: "{{ openstack_release | default('master') }}"
+      tags:
+        - clone-openstack-ansible
+
+    - name: Copy openstack_deploy to etc
+      command: cp -R etc/openstack_deploy /etc/
+      args:
+        chdir: /opt/openstack-ansible
+      tags:
+        - copy-openstack-deploy
+
+    - name: Bootstrap Ansible
+      command: scripts/bootstrap-ansible.sh
+      args:
+        chdir: /opt/openstack-ansible
+      tags:
+        - bootstrap-ansible
+
+    - name: Generate service credentials
+      command: python pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
+      args:
+        chdir: /opt/openstack-ansible/scripts
+      tags:
+        - generate-credentials
+
+    - name: Persist admin password
+      lineinfile:
+        dest: /etc/openstack_deploy/user_secrets.yml
+        regexp: "^keystone_auth_admin_password.*"
+        state: present
+        line: "keystone_auth_admin_password: openstack"
+      tags:
+        - persist-admin-password
+
+    - name: Copy user_variables.yml
+      copy:
+        src: templates/user_variables.yml
+        dest: /etc/openstack_deploy/user_variables.yml
+        owner: root
+        group: root
+        mode: 0600
+      tags:
+        - copy-user-variables
+
+    - name: Copy openstack_user_config.yml
+      copy:
+        src: templates/openstack_user_config.yml
+        dest: /etc/openstack_deploy/openstack_user_config.yml
+        owner: root
+        group: root
+        mode: 0600
+      tags:
+        - copy-user-config
+
+    - name: Copy yml conf.d files
+      copy:
+        src: "templates/{{ item }}.yml"
+        dest: "/etc/openstack_deploy/conf.d/{{ item }}.yml"
+        owner: root
+        group: root
+        mode: 0600
+      with_items:
+        #- aodh
+        #- ceph
+        - cinder
+        #- gnocchi
+        - haproxy
+        - heat
+        - horizon
+        #- ironic
+        - keystone
+        - logging
+        #- magnum
+        - neutron
+        - nova
+        - swift
+      tags:
+        - copy-conf-files
+
+    - name: Build openstack-ansible inventory
+      command: python /opt/openstack-ansible/playbooks/inventory/dynamic_inventory.py
+      tags:
+        - generate-inventory
+
+    - name: Wait for inventory to build
+      pause: seconds=5
+
+    - name: Add utility containers to OnMetal hosts
+      shell: "python /opt/openstack-ansible/scripts/inventory-manage.py -l|awk 'match($0, /(infra0._utility)/, m) { print $12 \" \" $2 \" \" m[1] }' >> /etc/hosts"
+      tags:
+        - add-utility-to-onmetal
+
+    - name: Create ansible symlink if it does not exist
+      shell: "if ! [ -L /opt/ansible-runtime/bin/ansible ]; then ln -s `which ansible` /opt/ansible-runtime/bin/ansible; fi;"
+
+    - name: Create ansible-playbook symlink if it does not exist
+      shell: "if ! [ -L /opt/ansible-runtime/bin/ansible-playbook ]; then ln -s `which ansible-playbook` /opt/ansible-runtime/bin/ansible-playbook; fi;"

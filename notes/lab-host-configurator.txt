@@ -1,0 +1,144 @@
+#!/bin/bash
+
+# Enable nested KVM
+echo 'options kvm_intel nested=1' >> /etc/modprobe.d/qemu-system-x86.conf
+
+# Upgrade repository data and install required packages
+apt-get update && apt-get upgrade -y
+apt-get install -y qemu tcpdump libvirt-bin libvirt-dev libguestfs-tools git git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev python-dev python curl vim telnet zip unzip nfs-common python-libvirt tmux iptables-persistent
+apt-get autoremove -y
+
+/etc/init.d/iptables-persistent flush
+
+cat > /root/.tmux.conf <<EOF
+# Set the prefix to ^A.
+unbind C-b
+set -g prefix ^A
+bind a send-prefix
+
+##########################
+# Session Initialization #
+##########################
+
+#################
+# Mouse Support #
+#################
+#setw -g mode-mouse on
+#set -g mouse-select-pane on
+#set -g mouse-resize-pane on
+#set -g mouse-select-window on
+
+##############
+# Status Bar #
+###############
+
+set-option -g status-utf8 on
+set-option -g status-justify right
+set-option -g status-bg black # colour213 # pink
+set-option -g status-fg cyan
+# set-option -g status-interval 5
+set-option -g status-left-length 30
+set-option -g status-left '#[fg=magenta]» #[fg=blue,bold]#T#[default]'
+set-option -g status-right '#[fg=red,bold][[ #(git branch) branch   ]] #[fg=cyan]»» #[fg=blue,bold]###S #[fg=magenta]%R %m-%d#(acpi | cut -d ',' -f 2)#[default]'
+set-option -g visual-activity on
+
+# Add titles to status bar
+set-option -g set-titles on
+set-option -g set-titles-string '#H:#S.#I.#P #W #T'
+EOF
+
+# Install ruby; plans to use this later
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+\curl -L https://get.rvm.io | bash -s stable
+echo "gem: --no-ri --no-rdoc" > ~/.gemrc
+source /etc/profile.d/rvm.sh
+rvm install ruby-2.2.1
+rvm use --default ruby-2.2.1
+gem install serverspec
+
+# Install pip and a few helper packages
+python <(curl -sk https://bootstrap.pypa.io/get-pip.py)
+pip install pyopenssl ndg-httpsclient pyasn1 bpython ansible==1.9.4
+
+# Mount the RPC Labs NFS share
+mkdir /labshare
+mount 10.209.128.54:/mnt /labshare
+
+# Install Open vSwitch
+cd /labshare/src
+dpkg -i openvswitch-common_2.4.90-1_amd64.deb openvswitch-switch_2.4.90-1_amd64.deb python-openvswitch_2.4.90-1_all.deb
+apt-get -f install
+
+# Setup additional drives as storage pools
+DRIVES='/dev/sdb /dev/sdc'
+for i in $DRIVES; do echo -e "n\np\n\n\n\nw\n"|fdisk $i; mkfs.ext4 -O ^has_journal ${i}1; done;
+cd /var/lib/libvirt/images
+mkdir pool00
+mkdir pool01
+mount /dev/sdb1 pool00
+virsh pool-define-as --name pool00 --type dir --target /var/lib/libvirt/images/pool00
+mount /dev/sdc1 pool01
+virsh pool-define-as --name pool01 --type dir --target /var/lib/libvirt/images/pool01
+for i in pool00 pool01; do virsh pool-autostart $i; virsh pool-start $i; done;
+tail -n2 /etc/mtab >> /etc/fstab
+
+# Add necessary Open vSwitch virtual switches
+ovs-vsctl add-br fwlbsw
+ovs-vsctl add-br lbsrvsw
+ovs-vsctl add-br lbhasw
+
+# Remove default libvirt network
+virsh net-destroy default
+virsh net-undefine default
+
+# Copy over ubuntu server iso
+cd /labshare
+cp ubuntu-14.04.4-server-amd64.iso /var/lib/libvirt/images/pool00/
+cp vyos-1.1.7-amd64.iso /var/lib/libvirt/images/pool00/
+for i in pool00 pool01; do virsh pool-refresh $i; done;
+
+# Create libvirt networks
+for i in *-working.xml; do virsh net-define $i; done;
+for i in `python -c 'import libvirt; conn=libvirt.open("qemu:///system"); print " ".join(conn.listDefinedNetworks())'`; do virsh net-autostart $i; virsh net-start $i; done;
+
+# Modify iptables for VPX and VyOS API and GUI
+HOST_IP=`ip addr show dev bond0.101|awk '/inet/ { split($2, ip, "/"); print ip[1]; exit }'`
+DRAC_BRIDGE=`python -c 'import libvirt; conn=libvirt.open("qemu:///system"); drac=conn.networkLookupByName("drac00"); print drac.bridgeName()'`
+SNET_BRIDGE=`python -c 'import libvirt; conn=libvirt.open("qemu:///system"); snet=conn.networkLookupByName("snet00"); print snet.bridgeName()'`
+iptables -I FORWARD -i bond0.101 -o "${DRAC_BRIDGE}" -p tcp -d 192.168.0.2 --dport 22 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD -i bond0.101 -o "${DRAC_BRIDGE}" -p tcp -d 10.5.0.4 --dport 22 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD -i bond0.101 -o "${DRAC_BRIDGE}" -p tcp -d 192.168.0.2 --dport 80 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD -i bond0.101 -o "${DRAC_BRIDGE}" -p tcp -d 10.5.0.4 --dport 80 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD -i bond0.101 -o "${DRAC_BRIDGE}" -p tcp -d 192.168.0.2 --dport 443 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD -i bond0.101 -o "${DRAC_BRIDGE}" -p tcp -d 10.5.0.4 --dport 443 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -I FORWARD -i bond0.401 -o "${SNET_BRIDGE}" -p tcp -d 10.5.0.4 --dport 80 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -t nat -I PREROUTING -i bond0.101 -p tcp -d "${HOST_IP}" --dport 1402 -j DNAT --to-destination 192.168.0.2:22
+iptables -t nat -I PREROUTING -i bond0.101 -p tcp -d "${HOST_IP}" --dport 1403 -j DNAT --to-destination 192.168.0.2:80
+iptables -t nat -I PREROUTING -i bond0.101 -p tcp -d "${HOST_IP}" --dport 1404 -j DNAT --to-destination 192.168.0.2:443
+iptables -t nat -I PREROUTING -i bond0.101 -p tcp -d "${HOST_IP}" --dport 1412 -j DNAT --to-destination 10.5.0.4:22
+iptables -t nat -I PREROUTING -i bond0.101 -p tcp -d "${HOST_IP}" --dport 1413 -j DNAT --to-destination 10.5.0.4:80
+iptables -t nat -I PREROUTING -i bond0.101 -p tcp -d "${HOST_IP}" --dport 1414 -j DNAT --to-destination 10.5.0.4:443
+iptables -t nat -I PREROUTING -i bond0.401 -p tcp -d 10.184.8.159 --dport 1413 -j DNAT --to-destination 10.5.0.4:80
+iptables -t nat -A POSTROUTING -s 10.5.0.0/24 -d 224.0.0.0/24 -o bond0.401 -j RETURN
+iptables -t nat -A POSTROUTING -s 10.5.0.0/24 -d 255.255.255.255/32 -o bond0.401 -j RETURN
+iptables -t nat -A POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o bond0.401 -p tcp -j MASQUERADE --to-ports 0-65535
+iptables -t nat -A POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o bond0.401 -p udp -j MASQUERADE --to-ports 0-65535
+iptables -t nat -A POSTROUTING -s 10.5.0.0/24 ! -d 10.5.0.0/24 -o bond0.401 -j MASQUERADE
+
+
+# Create firewall and loadbalancer libvirt VMs
+virsh define firewall.xml
+virsh define loadbalancer.xml
+tar xzf firewall.tgz -C /var/lib/libvirt/images/pool00
+tar xzf loadbalancer.tgz -C /var/lib/libvirt/images/pool00
+virsh start firewall
+virsh start loadbalancer
+
+
+cd /var/lib/libvirt/images/pool00
+qemu-img create -f qcow2 infra01.qcow2 204800M
+qemu-img create -f qcow2 infra02.qcow2 204800M
+qemu-img create -f qcow2 infra03.qcow2 204800M
+cd /var/lib/libvirt/images/pool01
+qemu-img create -f qcow2 compute01-lxc.qcow2 204800M
+qemu-img create -f qcow2 compute02-lxc.qcow2 204800M

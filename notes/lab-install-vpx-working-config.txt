@@ -1,0 +1,353 @@
+#NS10.5 Build 56.22
+# Last modified by `save config`, Mon Dec  7 14:13:52 2015
+set ns config -IPAddress 10.5.0.4 -netmask 255.255.255.0
+enable ns feature LB SSL
+enable ns mode FR L3 MBF Edge USNIP PMTUD
+set system parameter -natPcbForceFlushLimit 4294967295
+set system user nsroot 1ad8c96bb6fb2136a765b4a15db9c4d780f164e27b500c330 -encrypted
+set rsskeytype -rsstype ASYMMETRIC
+set lacp -sysPriority 32768 -mac 52:54:00:9f:70:ff
+set ns hostName loadbalancer
+set interface 0/1 -haMonitor OFF -throughput 0 -bandwidthHigh 0 -bandwidthNormal 0 -intftype "KVM Virtio" -ifnum 0/1
+set interface 1/1 -haMonitor OFF -throughput 0 -bandwidthHigh 0 -bandwidthNormal 0 -intftype "KVM Virtio" -ifnum 1/1
+set interface 1/2 -haMonitor OFF -throughput 0 -bandwidthHigh 0 -bandwidthNormal 0 -intftype "KVM Virtio" -ifnum 1/2
+set interface 1/3 -haMonitor OFF -throughput 0 -bandwidthHigh 0 -bandwidthNormal 0 -intftype "KVM Virtio" -ifnum 1/3
+set interface 1/4 -haMonitor OFF -throughput 0 -bandwidthHigh 0 -bandwidthNormal 0 -intftype "KVM Virtio" -ifnum 1/4
+set interface LO/1 -haMonitor OFF -throughput 0 -bandwidthHigh 0 -bandwidthNormal 0 -intftype Loopback -ifnum LO/1
+add vlan 100 -aliasName FW_LB
+add vlan 201 -aliasName RPC_HOST
+add vlan 202 -aliasName RPC_CONTAINER
+add vlan 205 -aliasName RPC_GATEWAY
+add ns ip6 fe80::5054:ff:fee2:e0a0/64 -scope link-local -type NSIP -vlan 1 -vServer DISABLED -mgmtAccess ENABLED -dynamicRouting ENABLED
+add ns ip 10.239.0.1 255.255.252.0 -vServer DISABLED -gui DISABLED
+add ns ip 10.240.0.1 255.255.252.0 -vServer DISABLED -gui DISABLED
+add ns ip 172.29.236.15 255.255.252.0 -vServer DISABLED -gui DISABLED -mgmtAccess ENABLED
+add ns ip 172.29.236.100 255.255.252.0 -type VIP -mgmtAccess ENABLED -hostRoute ENABLED -hostRtGw 172.29.236.15 -vserverRHILevel NONE
+add ns ip 172.24.96.249 255.255.252.0 -vServer DISABLED -mgmtAccess ENABLED
+set ipsec parameter -lifetime 28800
+bind vlan 100 -ifnum 0/1 -tagged
+bind vlan 100 -IPAddress 172.24.96.249 255.255.252.0
+bind vlan 201 -ifnum 1/1 -tagged
+bind vlan 201 -IPAddress 10.239.0.1 255.255.252.0
+bind vlan 202 -ifnum 1/1 -tagged
+bind vlan 202 -IPAddress 172.29.236.15 255.255.252.0
+bind vlan 205 -ifnum 1/2 -tagged
+bind vlan 205 -IPAddress 10.240.0.1 255.255.252.0
+set nd6RAvariables -vlan 1
+set snmp alarm APPFW-BUFFER-OVERFLOW -timeout 1
+set snmp alarm APPFW-COOKIE -timeout 1
+set snmp alarm APPFW-CSRF-TAG -timeout 1
+set snmp alarm APPFW-DENY-URL -timeout 1
+set snmp alarm APPFW-FIELD-CONSISTENCY -timeout 1
+set snmp alarm APPFW-FIELD-FORMAT -timeout 1
+set snmp alarm APPFW-POLICY-HIT -timeout 1
+set snmp alarm APPFW-REFERER-HEADER -timeout 1
+set snmp alarm APPFW-SAFE-COMMERCE -timeout 1
+set snmp alarm APPFW-SAFE-OBJECT -timeout 1
+set snmp alarm APPFW-SQL -timeout 1
+set snmp alarm APPFW-START-URL -timeout 1
+set snmp alarm APPFW-VIOLATIONS-TYPE -timeout 1
+set snmp alarm APPFW-XML-ATTACHMENT -timeout 1
+set snmp alarm APPFW-XML-DOS -timeout 1
+set snmp alarm APPFW-XML-SCHEMA-COMPILE -timeout 1
+set snmp alarm APPFW-XML-SOAP-FAULT -timeout 1
+set snmp alarm APPFW-XML-SQL -timeout 1
+set snmp alarm APPFW-XML-VALIDATION -timeout 1
+set snmp alarm APPFW-XML-WSI -timeout 1
+set snmp alarm APPFW-XML-XSS -timeout 1
+set snmp alarm APPFW-XSS -timeout 1
+set snmp alarm CLUSTER-NODE-HEALTH -time 86400 -timeout 86400
+set snmp alarm CLUSTER-NODE-QUORUM -time 86400 -timeout 86400
+set snmp alarm CLUSTER-VERSION-MISMATCH -time 86400 -timeout 86400
+set snmp alarm HA-BAD-SECONDARY-STATE -time 86400 -timeout 86400
+set snmp alarm HA-NO-HEARTBEATS -time 86400 -timeout 86400
+set snmp alarm HA-SYNC-FAILURE -time 86400 -timeout 86400
+set snmp alarm HA-VERSION-MISMATCH -time 86400 -timeout 86400
+set snmp alarm PORT-ALLOC-FAILED -time 3600 -timeout 3600
+set snmp alarm SYNFLOOD -timeout 1
+add server RPC_NODE_infra01_horizon_container-88d23104 172.29.239.73
+add server RPC_NODE_infra03_horizon_container-add0ae73 172.29.237.241
+add server RPC_NODE_infra02_horizon_container-06b64bad 172.29.237.213
+add server RPC_NODE_infra01_galera_container-2f6bc920 172.29.238.58
+add server RPC_NODE_infra03_galera_container-5f9d3289 172.29.237.10
+add server RPC_NODE_infra02_galera_container-4b93d843 172.29.238.16
+add server RPC_NODE_infra01_keystone_container-4565a141 172.29.239.240
+add server RPC_NODE_infra03_keystone_container-0157d645 172.29.238.150
+add server RPC_NODE_infra02_keystone_container-a3d390f3 172.29.238.170
+add server RPC_NODE_logger01_elasticsearch_container-909759f0 172.29.239.143
+add server RPC_NODE_infra01_neutron_server_container-a5354f26 172.29.238.113
+add server RPC_NODE_infra03_neutron_server_container-6669bce4 172.29.238.44
+add server RPC_NODE_infra02_neutron_server_container-5aff7713 172.29.239.205
+add server RPC_NODE_infra01_nova_api_ec2_container-c0924c7f 172.29.238.95
+add server RPC_NODE_infra03_nova_api_ec2_container-f43f3c68 172.29.236.202
+add server RPC_NODE_infra02_nova_api_ec2_container-e346be8d 172.29.239.220
+add server RPC_NODE_infra01_heat_apis_container-2a00378a 172.29.238.83
+add server RPC_NODE_infra03_heat_apis_container-e5faa3d9 172.29.237.250
+add server RPC_NODE_infra02_heat_apis_container-30b904b5 172.29.237.151
+add server RPC_NODE_infra01_cinder_api_container-9340348d 172.29.238.247
+add server RPC_NODE_infra03_cinder_api_container-2e21eea7 172.29.238.242
+add server RPC_NODE_infra02_cinder_api_container-b242ac0c 172.29.237.165
+add server RPC_NODE_logger01_kibana_container-f0ab861b 172.29.237.45
+add server RPC_NODE_infra01_nova_api_metadata_container-99e747bf 172.29.239.242
+add server RPC_NODE_infra03_nova_api_metadata_container-857e1b37 172.29.237.82
+add server RPC_NODE_infra02_nova_api_metadata_container-b4e5dfc8 172.29.237.73
+add server RPC_NODE_infra01_nova_api_os_compute_container-96c20b51 172.29.238.123
+add server RPC_NODE_infra03_nova_api_os_compute_container-9c581613 172.29.236.212
+add server RPC_NODE_infra02_nova_api_os_compute_container-9c04effc 172.29.237.155
+add server RPC_NODE_infra01_glance_container-a66efe8c 172.29.238.222
+add server RPC_NODE_infra03_glance_container-47392951 172.29.237.214
+add server RPC_NODE_infra02_glance_container-fe8b948b 172.29.237.237
+add server RPC_NODE_infra01_nova_spice_console_container-f0f4d411 172.29.237.227
+add server RPC_NODE_infra03_nova_spice_console_container-864c34a7 172.29.237.206
+add server RPC_NODE_infra02_nova_spice_console_container-a0ffeb80 172.29.239.162
+add serviceGroup RPC_POOL_HORIZON HTTP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 180 -svrTimeout 360 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_HORIZON_SSL HTTP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 180 -svrTimeout 360 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_KEYSTONE_SERVICE TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_GALERA TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_ELASTICSEARCH TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_NEUTRON_SERVER TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_NOVA_API_EC2 TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_HEAT_API TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_CINDER_API TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_KIBANA TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_NOVA_API_METADATA HTTP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 180 -svrTimeout 360 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_REPO HTTP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 180 -svrTimeout 360 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_NOVA_API_OS_COMPUTE TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_GLANCE_API TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_NOVA_SPICE_CONSOLE HTTP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 180 -svrTimeout 360 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_HEAT_API_CLOUDWATCH TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_HEAT_API_CFN TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_GLANCE_REGISTRY TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_SWIFT HTTP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 180 -svrTimeout 360 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_KEYSTONE_ADMIN TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add serviceGroup RPC_POOL_KIBANA_SSL TCP -maxClient 0 -maxReq 0 -cip DISABLED -usip NO -useproxyport YES -cltTimeout 9000 -svrTimeout 9000 -CKA NO -TCPB NO -CMP NO
+add ssl certKey ns-server-certificate -cert ns-server.cert -key ns-server.key
+set lb parameter -sessionsThreshold 150000
+add lb vserver RPC_VS_GALERA TCP 172.29.236.100 3306 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_KEYSTONE_SERVICE TCP 172.29.236.100 5000 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_ELASTICSEARCH TCP 172.29.236.100 9200 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_NEUTRON_SERVER TCP 172.29.236.100 9696 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_NOVA_API_EC2 TCP 172.29.236.100 8773 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_HORIZON_SSL HTTP 172.29.236.100 443 -persistenceType NONE -Listenpolicy None -cltTimeout 180
+add lb vserver RPC_VS_HEAT_API TCP 172.29.236.100 8004 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_CINDER_API TCP 172.29.236.100 8776 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_KIBANA TCP 172.29.236.100 8888 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_NOVA_API_METADATA HTTP 172.29.236.100 8775 -persistenceType NONE -Listenpolicy None -cltTimeout 180
+add lb vserver RPC_VS_REPO HTTP 172.29.236.100 8181 -persistenceType NONE -Listenpolicy None -cltTimeout 180
+add lb vserver RPC_VS_NOVA_API_OS_COMPUTE TCP 172.29.236.100 8774 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_GLANCE_API TCP 172.29.236.100 9292 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_NOVA_SPICE_CONSOLE HTTP 172.29.236.100 6082 -persistenceType NONE -Listenpolicy None -cltTimeout 180
+add lb vserver RPC_VS_HEAT_API_CLOUDWATCH TCP 172.29.236.100 8003 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_HORIZON HTTP 172.29.236.100 80 -persistenceType NONE -Listenpolicy None -cltTimeout 180
+add lb vserver RPC_VS_HEAT_API_CFN TCP 172.29.236.100 8000 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_GLANCE_REGISTRY TCP 172.29.236.100 9191 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_SWIFT HTTP 172.29.236.100 8080 -persistenceType NONE -Listenpolicy None -cltTimeout 180
+add lb vserver RPC_VS_KEYSTONE_ADMIN TCP 172.29.236.100 35357 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+add lb vserver RPC_VS_KIBANA_SSL TCP 172.29.236.100 8443 -persistenceType NONE -Listenpolicy None -cltTimeout 9000
+set cache parameter -via "NS-CACHE-10.0:   1"
+set aaa parameter -maxAAAUsers 5
+set ns rpcNode 10.5.0.4 -password 8a7b474124957776a0cd31b862cbe4d72b5cbd59868a136d4bdeb56cf03b28 -encrypted -srcIP 10.5.0.4
+bind cmp global ns_adv_nocmp_xml_ie -priority 8700 -gotoPriorityExpression END -type RES_DEFAULT
+bind cmp global ns_adv_nocmp_mozilla_47 -priority 8800 -gotoPriorityExpression END -type RES_DEFAULT
+bind cmp global ns_adv_cmp_mscss -priority 8900 -gotoPriorityExpression END -type RES_DEFAULT
+bind cmp global ns_adv_cmp_msapp -priority 9000 -gotoPriorityExpression END -type RES_DEFAULT
+bind cmp global ns_adv_cmp_content_type -priority 10000 -gotoPriorityExpression END -type RES_DEFAULT
+set responder param -undefAction NOOP
+add ca action NOOP_CA -type noop
+add cache contentGroup DEFAULT
+set cache contentGroup NSFEO -maxResSize 1994752
+add cache contentGroup BASEFILE -relExpiry 86000 -weakNegRelExpiry 600 -maxResSize 256 -memLimit 2
+add cache contentGroup DELTAJS -relExpiry 86000 -weakNegRelExpiry 600 -insertAge NO -maxResSize 256 -memLimit 1 -pinned YES
+add cache contentGroup ctx_cg_poc -relExpiry 86000 -weakNegRelExpiry 600 -insertAge NO -maxResSize 500 -memLimit 256 -pinned YES
+add cache policy _nonGetReq -rule "!HTTP.REQ.METHOD.eq(GET)" -action NOCACHE
+add cache policy _advancedConditionalReq -rule "HTTP.REQ.HEADER(\"If-Match\").EXISTS || HTTP.REQ.HEADER(\"If-Unmodified-Since\").EXISTS" -action NOCACHE
+add cache policy _personalizedReq -rule "HTTP.REQ.HEADER(\"Cookie\").EXISTS || HTTP.REQ.HEADER(\"Authorization\").EXISTS || HTTP.REQ.HEADER(\"Proxy-Authorization\").EXISTS || HTTP.REQ.IS_NTLM_OR_NEGOTIATE" -action MAY_NOCACHE
+add cache policy _uncacheableStatusRes -rule "! ((HTTP.RES.STATUS.EQ(200)) || (HTTP.RES.STATUS.EQ(304)) || (HTTP.RES.STATUS.BETWEEN(400,499)) || (HTTP.RES.STATUS.BETWEEN(300, 302)) || (HTTP.RES.STATUS.EQ(307))|| (HTTP.RES.STATUS.EQ(203)))" -action NOCACHE
+add cache policy _uncacheableCacheControlRes -rule "((HTTP.RES.CACHE_CONTROL.IS_PRIVATE) || (HTTP.RES.CACHE_CONTROL.IS_NO_CACHE) || (HTTP.RES.CACHE_CONTROL.IS_NO_STORE) || (HTTP.RES.CACHE_CONTROL.IS_INVALID))" -action NOCACHE
+add cache policy _cacheableCacheControlRes -rule "((HTTP.RES.CACHE_CONTROL.IS_PUBLIC) || (HTTP.RES.CACHE_CONTROL.IS_MAX_AGE) || (HTTP.RES.CACHE_CONTROL.IS_MUST_REVALIDATE) || (HTTP.RES.CACHE_CONTROL.IS_PROXY_REVALIDATE) || (HTTP.RES.CACHE_CONTROL.IS_S_MAXAGE))" -action CACHE -storeInGroup DEFAULT
+add cache policy _uncacheableVaryRes -rule "((HTTP.RES.HEADER(\"Vary\").EXISTS) && ((HTTP.RES.HEADER(\"Vary\").INSTANCE(1).LENGTH > 0) || (!HTTP.RES.HEADER(\"Vary\").STRIP_END_WS.SET_TEXT_MODE(IGNORECASE).eq(\"Accept-Encoding\"))))" -action NOCACHE
+add cache policy _uncacheablePragmaRes -rule "HTTP.RES.HEADER(\"Pragma\").EXISTS" -action NOCACHE
+add cache policy _cacheableExpiryRes -rule "HTTP.RES.HEADER(\"Expires\").EXISTS" -action CACHE -storeInGroup DEFAULT
+add cache policy _imageRes -rule "HTTP.RES.HEADER(\"Content-Type\").SET_TEXT_MODE(IGNORECASE).STARTSWITH(\"image/\")" -action CACHE -storeInGroup DEFAULT
+add cache policy _personalizedRes -rule "HTTP.RES.HEADER(\"Set-Cookie\").EXISTS || HTTP.RES.HEADER(\"Set-Cookie2\").EXISTS" -action NOCACHE
+add cache policy ctx_images -rule "HTTP.REQ.URL.SET_TEXT_MODE(IGNORECASE).CONTAINS_INDEX(\"ctx_file_extensions\").BETWEEN(101,150)" -action CACHE -storeInGroup ctx_cg_poc
+add cache policy ctx_web_css -rule "HTTP.REQ.URL.ENDSWITH(\".css\")" -action CACHE -storeInGroup ctx_cg_poc
+add cache policy ctx_doc_pdf -rule "HTTP.REQ.URL.ENDSWITH(\".pdf\")" -action CACHE -storeInGroup ctx_cg_poc
+add cache policy ctx_web_JavaScript -rule "HTTP.REQ.URL.ENDSWITH(\".js\")" -action CACHE -storeInGroup ctx_cg_poc
+add cache policy ctx_web_JavaScript-Res -rule "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"application/x-javascript\")" -action CACHE -storeInGroup ctx_cg_poc
+add cache policy ctx_NOCACHE_Cleanup -rule TRUE -action NOCACHE
+add cache policylabel _reqBuiltinDefaults -evaluates REQ
+add cache policylabel _resBuiltinDefaults -evaluates RES
+bind cache policylabel _reqBuiltinDefaults -policyName _nonGetReq -priority 100 -gotoPriorityExpression END
+bind cache policylabel _reqBuiltinDefaults -policyName _advancedConditionalReq -priority 200 -gotoPriorityExpression END
+bind cache policylabel _reqBuiltinDefaults -policyName _personalizedReq -priority 300 -gotoPriorityExpression END
+bind cache policylabel _resBuiltinDefaults -policyName _uncacheableStatusRes -priority 100 -gotoPriorityExpression END
+bind cache policylabel _resBuiltinDefaults -policyName _uncacheableVaryRes -priority 200 -gotoPriorityExpression END
+bind cache policylabel _resBuiltinDefaults -policyName _uncacheableCacheControlRes -priority 300 -gotoPriorityExpression END
+bind cache policylabel _resBuiltinDefaults -policyName _cacheableCacheControlRes -priority 400 -gotoPriorityExpression END
+bind cache policylabel _resBuiltinDefaults -policyName _uncacheablePragmaRes -priority 500 -gotoPriorityExpression END
+bind cache policylabel _resBuiltinDefaults -policyName _cacheableExpiryRes -priority 600 -gotoPriorityExpression END
+bind cache policylabel _resBuiltinDefaults -policyName _imageRes -priority 700 -gotoPriorityExpression END
+bind cache policylabel _resBuiltinDefaults -policyName _personalizedRes -priority 800 -gotoPriorityExpression END
+bind cache global NOPOLICY -priority 185883 -gotoPriorityExpression USE_INVOCATION_RESULT -type REQ_DEFAULT -invoke policylabel _reqBuiltinDefaults
+bind cache global NOPOLICY -priority 185883 -gotoPriorityExpression USE_INVOCATION_RESULT -type RES_DEFAULT -invoke policylabel _resBuiltinDefaults
+bind lb vserver RPC_VS_HORIZON RPC_POOL_HORIZON
+bind lb vserver RPC_VS_HORIZON_SSL RPC_POOL_HORIZON_SSL
+bind lb vserver RPC_VS_KEYSTONE_SERVICE RPC_POOL_KEYSTONE_SERVICE
+bind lb vserver RPC_VS_GALERA RPC_POOL_GALERA
+bind lb vserver RPC_VS_ELASTICSEARCH RPC_POOL_ELASTICSEARCH
+bind lb vserver RPC_VS_NEUTRON_SERVER RPC_POOL_NEUTRON_SERVER
+bind lb vserver RPC_VS_NOVA_API_EC2 RPC_POOL_NOVA_API_EC2
+bind lb vserver RPC_VS_HEAT_API RPC_POOL_HEAT_API
+bind lb vserver RPC_VS_CINDER_API RPC_POOL_CINDER_API
+bind lb vserver RPC_VS_KIBANA RPC_POOL_KIBANA
+bind lb vserver RPC_VS_NOVA_API_METADATA RPC_POOL_NOVA_API_METADATA
+bind lb vserver RPC_VS_REPO RPC_POOL_REPO
+bind lb vserver RPC_VS_NOVA_API_OS_COMPUTE RPC_POOL_NOVA_API_OS_COMPUTE
+bind lb vserver RPC_VS_GLANCE_API RPC_POOL_GLANCE_API
+bind lb vserver RPC_VS_NOVA_SPICE_CONSOLE RPC_POOL_NOVA_SPICE_CONSOLE
+bind lb vserver RPC_VS_HEAT_API_CLOUDWATCH RPC_POOL_HEAT_API_CLOUDWATCH
+bind lb vserver RPC_VS_HEAT_API_CFN RPC_POOL_HEAT_API_CFN
+bind lb vserver RPC_VS_GLANCE_REGISTRY RPC_POOL_GLANCE_REGISTRY
+bind lb vserver RPC_VS_SWIFT RPC_POOL_SWIFT
+bind lb vserver RPC_VS_KEYSTONE_ADMIN RPC_POOL_KEYSTONE_ADMIN
+bind lb vserver RPC_VS_KIBANA_SSL RPC_POOL_KIBANA_SSL
+add dns nameServer 8.8.8.8
+add dns nameServer 8.8.4.4
+set ns diameter -identity netscaler.com -realm com
+set ns tcpbufParam -memLimit 200
+set dns parameter -dns64Timeout 1000
+add dns nsRec . a.root-servers.net -TTL 3600000
+add dns nsRec . b.root-servers.net -TTL 3600000
+add dns nsRec . c.root-servers.net -TTL 3600000
+add dns nsRec . d.root-servers.net -TTL 3600000
+add dns nsRec . e.root-servers.net -TTL 3600000
+add dns nsRec . f.root-servers.net -TTL 3600000
+add dns nsRec . g.root-servers.net -TTL 3600000
+add dns nsRec . h.root-servers.net -TTL 3600000
+add dns nsRec . i.root-servers.net -TTL 3600000
+add dns nsRec . j.root-servers.net -TTL 3600000
+add dns nsRec . k.root-servers.net -TTL 3600000
+add dns nsRec . l.root-servers.net -TTL 3600000
+add dns nsRec . m.root-servers.net -TTL 3600000
+add dns addRec l.root-servers.net 199.7.83.42 -TTL 3600000
+add dns addRec b.root-servers.net 192.228.79.201 -TTL 3600000
+add dns addRec d.root-servers.net 199.7.91.13 -TTL 3600000
+add dns addRec j.root-servers.net 192.58.128.30 -TTL 3600000
+add dns addRec h.root-servers.net 128.63.2.53 -TTL 3600000
+add dns addRec f.root-servers.net 192.5.5.241 -TTL 3600000
+add dns addRec k.root-servers.net 193.0.14.129 -TTL 3600000
+add dns addRec a.root-servers.net 198.41.0.4 -TTL 3600000
+add dns addRec c.root-servers.net 192.33.4.12 -TTL 3600000
+add dns addRec m.root-servers.net 202.12.27.33 -TTL 3600000
+add dns addRec i.root-servers.net 192.36.148.17 -TTL 3600000
+add dns addRec g.root-servers.net 192.112.36.4 -TTL 3600000
+add dns addRec e.root-servers.net 192.203.230.10 -TTL 3600000
+set lb monitor ldns-dns LDNS-DNS -query . -queryType Address
+add lb monitor rpc-endpoint USER -scriptName rpc-endpoint.pl -dispatcherIP 127.0.0.1 -dispatcherPort 3013 -LRTM DISABLED
+bind serviceGroup RPC_POOL_HORIZON RPC_NODE_infra02_horizon_container-06b64bad 80
+bind serviceGroup RPC_POOL_HORIZON RPC_NODE_infra03_horizon_container-add0ae73 80
+bind serviceGroup RPC_POOL_HORIZON RPC_NODE_infra01_horizon_container-88d23104 80
+bind serviceGroup RPC_POOL_HORIZON_SSL RPC_NODE_infra02_horizon_container-06b64bad 443
+bind serviceGroup RPC_POOL_HORIZON_SSL RPC_NODE_infra03_horizon_container-add0ae73 443
+bind serviceGroup RPC_POOL_HORIZON_SSL RPC_NODE_infra01_horizon_container-88d23104 443
+bind serviceGroup RPC_POOL_KEYSTONE_SERVICE RPC_NODE_infra03_keystone_container-0157d645 5000
+bind serviceGroup RPC_POOL_KEYSTONE_SERVICE RPC_NODE_infra02_keystone_container-a3d390f3 5000
+bind serviceGroup RPC_POOL_KEYSTONE_SERVICE RPC_NODE_infra01_keystone_container-4565a141 5000
+bind serviceGroup RPC_POOL_KEYSTONE_SERVICE -monitorName rpc-endpoint
+bind serviceGroup RPC_POOL_GALERA RPC_NODE_infra03_galera_container-5f9d3289 3306
+bind serviceGroup RPC_POOL_GALERA RPC_NODE_infra02_galera_container-4b93d843 3306
+bind serviceGroup RPC_POOL_GALERA RPC_NODE_infra01_galera_container-2f6bc920 3306
+bind serviceGroup RPC_POOL_ELASTICSEARCH RPC_NODE_logger01_elasticsearch_container-909759f0 9200
+bind serviceGroup RPC_POOL_NEUTRON_SERVER RPC_NODE_infra03_neutron_server_container-6669bce4 9696
+bind serviceGroup RPC_POOL_NEUTRON_SERVER RPC_NODE_infra01_neutron_server_container-a5354f26 9696
+bind serviceGroup RPC_POOL_NEUTRON_SERVER RPC_NODE_infra02_neutron_server_container-5aff7713 9696
+bind serviceGroup RPC_POOL_NEUTRON_SERVER -monitorName rpc-endpoint
+bind serviceGroup RPC_POOL_NOVA_API_EC2 RPC_NODE_infra03_nova_api_ec2_container-f43f3c68 8773
+bind serviceGroup RPC_POOL_NOVA_API_EC2 RPC_NODE_infra01_nova_api_ec2_container-c0924c7f 8773
+bind serviceGroup RPC_POOL_NOVA_API_EC2 RPC_NODE_infra02_nova_api_ec2_container-e346be8d 8773
+bind serviceGroup RPC_POOL_HEAT_API RPC_NODE_infra02_heat_apis_container-30b904b5 8004
+bind serviceGroup RPC_POOL_HEAT_API RPC_NODE_infra03_heat_apis_container-e5faa3d9 8004
+bind serviceGroup RPC_POOL_HEAT_API RPC_NODE_infra01_heat_apis_container-2a00378a 8004
+bind serviceGroup RPC_POOL_HEAT_API -monitorName rpc-endpoint
+bind serviceGroup RPC_POOL_CINDER_API RPC_NODE_infra02_cinder_api_container-b242ac0c 8776
+bind serviceGroup RPC_POOL_CINDER_API RPC_NODE_infra03_cinder_api_container-2e21eea7 8776
+bind serviceGroup RPC_POOL_CINDER_API RPC_NODE_infra01_cinder_api_container-9340348d 8776
+bind serviceGroup RPC_POOL_CINDER_API -monitorName rpc-endpoint
+bind serviceGroup RPC_POOL_KIBANA RPC_NODE_logger01_kibana_container-f0ab861b 80
+bind serviceGroup RPC_POOL_NOVA_API_METADATA RPC_NODE_infra02_nova_api_metadata_container-b4e5dfc8 8775
+bind serviceGroup RPC_POOL_NOVA_API_METADATA RPC_NODE_infra03_nova_api_metadata_container-857e1b37 8775
+bind serviceGroup RPC_POOL_NOVA_API_METADATA RPC_NODE_infra01_nova_api_metadata_container-99e747bf 8775
+bind serviceGroup RPC_POOL_REPO RPC_NODE_logger01_kibana_container-f0ab861b 80
+bind serviceGroup RPC_POOL_NOVA_API_OS_COMPUTE RPC_NODE_infra03_nova_api_os_compute_container-9c581613 8774
+bind serviceGroup RPC_POOL_NOVA_API_OS_COMPUTE RPC_NODE_infra02_nova_api_os_compute_container-9c04effc 8774
+bind serviceGroup RPC_POOL_NOVA_API_OS_COMPUTE RPC_NODE_infra01_nova_api_os_compute_container-96c20b51 8774
+bind serviceGroup RPC_POOL_NOVA_API_OS_COMPUTE -monitorName rpc-endpoint
+bind serviceGroup RPC_POOL_GLANCE_API RPC_NODE_infra03_glance_container-47392951 9292
+bind serviceGroup RPC_POOL_GLANCE_API RPC_NODE_infra02_glance_container-fe8b948b 9292
+bind serviceGroup RPC_POOL_GLANCE_API RPC_NODE_infra01_glance_container-a66efe8c 9292
+bind serviceGroup RPC_POOL_GLANCE_API -monitorName rpc-endpoint
+bind serviceGroup RPC_POOL_NOVA_SPICE_CONSOLE RPC_NODE_infra03_nova_spice_console_container-864c34a7 6082
+bind serviceGroup RPC_POOL_NOVA_SPICE_CONSOLE RPC_NODE_infra01_nova_spice_console_container-f0f4d411 6082
+bind serviceGroup RPC_POOL_NOVA_SPICE_CONSOLE RPC_NODE_infra02_nova_spice_console_container-a0ffeb80 6082
+bind serviceGroup RPC_POOL_HEAT_API_CLOUDWATCH RPC_NODE_infra02_heat_apis_container-30b904b5 8003
+bind serviceGroup RPC_POOL_HEAT_API_CLOUDWATCH RPC_NODE_infra03_heat_apis_container-e5faa3d9 8003
+bind serviceGroup RPC_POOL_HEAT_API_CLOUDWATCH RPC_NODE_infra01_heat_apis_container-2a00378a 8003
+bind serviceGroup RPC_POOL_HEAT_API_CFN RPC_NODE_infra02_heat_apis_container-30b904b5 8000
+bind serviceGroup RPC_POOL_HEAT_API_CFN RPC_NODE_infra03_heat_apis_container-e5faa3d9 8000
+bind serviceGroup RPC_POOL_HEAT_API_CFN RPC_NODE_infra01_heat_apis_container-2a00378a 8000
+bind serviceGroup RPC_POOL_GLANCE_REGISTRY RPC_NODE_infra03_glance_container-47392951 9191
+bind serviceGroup RPC_POOL_GLANCE_REGISTRY RPC_NODE_infra02_glance_container-fe8b948b 9191
+bind serviceGroup RPC_POOL_GLANCE_REGISTRY RPC_NODE_infra01_glance_container-a66efe8c 9191
+bind serviceGroup RPC_POOL_GLANCE_REGISTRY -monitorName rpc-endpoint
+bind serviceGroup RPC_POOL_SWIFT RPC_NODE_logger01_kibana_container-f0ab861b 8080
+bind serviceGroup RPC_POOL_KEYSTONE_ADMIN RPC_NODE_infra03_keystone_container-0157d645 35357
+bind serviceGroup RPC_POOL_KEYSTONE_ADMIN RPC_NODE_infra02_keystone_container-a3d390f3 35357
+bind serviceGroup RPC_POOL_KEYSTONE_ADMIN RPC_NODE_infra01_keystone_container-4565a141 35357
+bind serviceGroup RPC_POOL_KIBANA_SSL RPC_NODE_logger01_kibana_container-f0ab861b 8443
+add route 0.0.0.0 0.0.0.0 172.24.96.1
+add route 10.5.0.0 255.255.255.0 10.5.0.1
+set ssl service nshttps-172.24.96.249-443 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set ssl service nsrpcs-172.24.96.249-3008 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set ssl service nshttps-172.29.236.15-443 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set ssl service nsrpcs-172.29.236.15-3008 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set ssl service nshttps-::1l-443 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set ssl service nsrpcs-::1l-3008 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set ssl service nskrpcs-127.0.0.1-3009 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set ssl service nshttps-127.0.0.1-443 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set ssl service nsrpcs-127.0.0.1-3008 -eRSA ENABLED -sessReuse DISABLED -tls11 DISABLED -tls12 DISABLED
+set vpn parameter -forceCleanup none -clientOptions all -clientConfiguration all
+bind ssl service nshttps-172.24.96.249-443 -certkeyName ns-server-certificate
+bind ssl service nsrpcs-172.24.96.249-3008 -certkeyName ns-server-certificate
+bind ssl service nshttps-172.29.236.15-443 -certkeyName ns-server-certificate
+bind ssl service nsrpcs-172.29.236.15-3008 -certkeyName ns-server-certificate
+bind ssl service nshttps-::1l-443 -certkeyName ns-server-certificate
+bind ssl service nsrpcs-::1l-3008 -certkeyName ns-server-certificate
+bind ssl service nskrpcs-127.0.0.1-3009 -certkeyName ns-server-certificate
+bind ssl service nshttps-127.0.0.1-443 -certkeyName ns-server-certificate
+bind ssl service nsrpcs-127.0.0.1-3008 -certkeyName ns-server-certificate
+bind ssl service nshttps-172.24.96.249-443 -eccCurveName P_256
+bind ssl service nshttps-172.24.96.249-443 -eccCurveName P_384
+bind ssl service nshttps-172.24.96.249-443 -eccCurveName P_224
+bind ssl service nshttps-172.24.96.249-443 -eccCurveName P_521
+bind ssl service nsrpcs-172.24.96.249-3008 -eccCurveName P_256
+bind ssl service nsrpcs-172.24.96.249-3008 -eccCurveName P_384
+bind ssl service nsrpcs-172.24.96.249-3008 -eccCurveName P_224
+bind ssl service nsrpcs-172.24.96.249-3008 -eccCurveName P_521
+bind ssl service nshttps-172.29.236.15-443 -eccCurveName P_256
+bind ssl service nshttps-172.29.236.15-443 -eccCurveName P_384
+bind ssl service nshttps-172.29.236.15-443 -eccCurveName P_224
+bind ssl service nshttps-172.29.236.15-443 -eccCurveName P_521
+bind ssl service nsrpcs-172.29.236.15-3008 -eccCurveName P_256
+bind ssl service nsrpcs-172.29.236.15-3008 -eccCurveName P_384
+bind ssl service nsrpcs-172.29.236.15-3008 -eccCurveName P_224
+bind ssl service nsrpcs-172.29.236.15-3008 -eccCurveName P_521
+set L3Param -icmpErrGenerate DISABLED
+set ns encryptionParams -method AES256 -keyValue ff0e316156e61a0fc09b54e50dbebb951b068401e1f1123b79d2b63a9c3f631bd692b1420be722018f28ce57ab0835b268c112b8 -encrypted
+add appfw JSONContentType "^application/json$" -isRegex REGEX
+add appfw XMLContentType ".*/xml" -isRegex REGEX
+add appfw XMLContentType ".*/.*\\+xml" -isRegex REGEX
+add appfw XMLContentType ".*/xml-.*" -isRegex REGEX
+set ip6TunnelParam -srcIP ::
+set ptp -state ENABLE
+set ns param -timezone "GMT-05:00-CDT-America/Chicago"
