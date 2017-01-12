@@ -6,6 +6,12 @@
   serial: 1
 
   tasks:
+    - name: Remove ansible symlink if it does exist
+      shell: "if [ -L /opt/ansible-runtime/bin/ansible ]; then unlink /opt/ansible-runtime/bin/ansible; fi;"
+
+    - name: Remove ansible-playbook symlink if it does exist
+      shell: "if [ -L /opt/ansible-runtime/bin/ansible-playbook ]; then unlink /opt/ansible-runtime/bin/ansible-playbook; fi;"
+
     - name: Remove existing openstack-ansible
       command: rm -rf openstack-ansible
       args:
@@ -133,7 +139,7 @@
         - add-utility-to-onmetal
 
     - name: Create ansible symlink if it does not exist
-      shell: "if ! [ -L /opt/ansible-runtime/bin/ansible ]; then ln -s `which ansible` /opt/ansible-runtime/bin/ansible; fi;"
+      shell: "if ! [ -L /opt/ansible-runtime/bin/ansible ]; then ln -s /usr/local/bin/ansible /opt/ansible-runtime/bin/ansible; fi;"
 
     - name: Create ansible-playbook symlink if it does not exist
-      shell: "if ! [ -L /opt/ansible-runtime/bin/ansible-playbook ]; then ln -s `which ansible-playbook` /opt/ansible-runtime/bin/ansible-playbook; fi;"
+      shell: "if ! [ -L /opt/ansible-runtime/bin/ansible-playbook ]; then ln -s /usr/local/bin/ansible-playbook /opt/ansible-runtime/bin/ansible-playbook; fi;"
