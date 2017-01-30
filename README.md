@@ -71,7 +71,7 @@ ansible-playbook -i inventory playbooks/prepare-swift-disks.yml
 ansible-playbook -i inventory playbooks/prepare-cinder-disks.yml
 
 # Vanilla OpenStack-Ansible (master if branch not specified)
-ansible-playbook -i inventory playbooks/prepare-for-osa.yml
+ansible-playbook -i inventory playbooks/prepare-for-osa.yml -e "openstack_release='stable/newton'"
 
 # Install OpenStack
 cd /opt/openstack-ansible/playbooks
