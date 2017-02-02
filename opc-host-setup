@@ -147,6 +147,7 @@ bind a send-prefix
 ##########################
 # Session Initialization #
 ##########################
+set-option -g history-limit 30000
 
 #################
 # Mouse Support #
