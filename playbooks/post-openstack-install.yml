@@ -5,6 +5,8 @@
   hosts: localhost
 
   tasks:
+    - name: Install python-openstackclient
+
     - name: Get cloud images
 
     - name: Import images into Glance

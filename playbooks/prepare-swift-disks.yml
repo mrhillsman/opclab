@@ -29,7 +29,7 @@
     - name: Add disk to fstab
       lineinfile:
         dest: /etc/fstab
-        line: "LABEL={{ item }} /srv/node/{{ item }} xfs noatime,nodiratime,nobarrier,logbufs=8,noauto 0 0"
+        line: "LABEL={{ item }} /srv/node/{{ item }} xfs noatime,nodiratime,nobarrier,logbufs=8,auto 0 0"
         insertafter: EOF
         state: present
       with_items: "{{ disks }}"

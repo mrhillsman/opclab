@@ -51,7 +51,7 @@
 
   tasks:
     - name: "Remove all nat table prerouting rules"
-      shell: "/sbin/iptables -t nat -D PREROUTING -i bond0.101 -p tcp -d 104.130.19.191 --dport {{ item }} -j DNAT --to-destination 192.168.0.249:{{ item }}"
+      shell: "/sbin/iptables -t nat -D PREROUTING -i bond0.135 -p tcp -d 146.20.141.166 --dport {{ item }} -j DNAT --to-destination 192.168.0.249:{{ item }}"
       args:
         executable: /bin/bash
       with_items: "{{ ports }}"
@@ -60,7 +60,7 @@
         - remove-prerouting-rules
 
     - name: "Remove all filter table forward rules"
-      shell: "/sbin/iptables -t filter -D FORWARD -i bond0.101 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+      shell: "/sbin/iptables -t filter -D FORWARD -i bond0.135 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
       args:
         executable: /bin/bash
       with_items: "{{ ports }}"
@@ -69,15 +69,15 @@
         - remove-forward-rules
 
     - name: "Add ports to nat table prerouting chain"
-      shell: "/sbin/iptables -t nat -I PREROUTING -i bond0.101 -p tcp -d 104.130.19.191 --dport {{ item }} -j DNAT --to-destination 192.168.0.249:{{ item }}"
+      shell: "/sbin/iptables -t nat -I PREROUTING -i bond0.135 -p tcp -d 146.20.141.166 --dport {{ item }} -j DNAT --to-destination 192.168.0.249:{{ item }}"
       args:
         executable: /bin/bash
       # will use below when insert is supported
       # iptables:
       #   chain: PREROUTING
-      #   destination: 104.130.19.191
+      #   destination: 146.20.141.166
       #   destination_port: "{{ item }}"
-      #   in_interface: bond0.101
+      #   in_interface: bond0.135
       #   jump: DNAT
       #   protocol: tcp
       #   state: present
@@ -89,7 +89,7 @@
         - add-prerouting-rules
 
     - name: "Add ports to filter table forward chain"
-      shell: "/sbin/iptables -t filter -I FORWARD -i bond0.101 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+      shell: "/sbin/iptables -t filter -I FORWARD -i bond0.135 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
       args:
         executable: /bin/bash
       # will use below when insert is supported
@@ -101,7 +101,7 @@
       #     - ESTABLISHED
       #   destination: 192.168.0.249
       #   destination_port: "{{ item }}"
-      #   in_interface: bond0.101
+      #   in_interface: bond0.135
       #   jump: ACCEPT
       #   out_interface: virbr0
       #   protocol: tcp

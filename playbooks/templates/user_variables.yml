@@ -33,7 +33,7 @@ haproxy_ssl: True
 # internal and external addresses.
 haproxy_keepalived_internal_vip_cidr: "{{internal_lb_vip_address}}/22"
 haproxy_keepalived_external_vip_cidr: "172.24.96.249/22"
-haproxy_keepalived_internal_interface: br-mgmt
+haproxy_keepalived_internal_interface: mgmt
 haproxy_keepalived_external_interface: bond0
 keepalived_use_latest_stable: True
 

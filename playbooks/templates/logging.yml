@@ -2,4 +2,8 @@
 # /etc/openstack_deploy/conf.d/logging.yml
 log_hosts:
   logger01:
-    ip: 172.29.176.110
+    ip: 172.29.176.80
+  logger02:
+    ip: 172.29.176.81
+  logger03:
+    ip: 172.29.176.82

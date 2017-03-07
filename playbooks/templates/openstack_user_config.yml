@@ -15,15 +15,15 @@ used_ips:
 global_overrides:
   internal_lb_vip_address: 172.29.176.100
   external_lb_vip_address: 192.168.0.249
-  management_bridge: "br-mgmt"
-  tunnel_bridge: "br-vxlan"
+  management_bridge: "mgmt"
+  tunnel_bridge: "vxlan"
   provider_networks:
     - network:
         group_binds:
           - all_containers
           - hosts
         type: "raw"
-        container_bridge: "br-mgmt"
+        container_bridge: "mgmt"
         container_interface: "eth1"
         container_type: "veth"
         ip_from_q: "container"
@@ -40,7 +40,7 @@ global_overrides:
           # Uncomment the next line if using swift with a storage network.
           - swift_proxy
         type: "raw"
-        container_bridge: "br-storage"
+        container_bridge: "storage"
         container_type: "veth"
         container_interface: "eth2"
         container_mtu: "9000"
@@ -48,7 +48,7 @@ global_overrides:
     - network:
         group_binds:
           - neutron_linuxbridge_agent
-        container_bridge: "br-vxlan"
+        container_bridge: "vxlan"
         container_type: "veth"
         container_interface: "eth10"
         container_mtu: "9000"
@@ -59,7 +59,7 @@ global_overrides:
     - network:
         group_binds:
           - neutron_linuxbridge_agent
-        container_bridge: "br-vlan"
+        container_bridge: "vlan"
         container_type: "veth"
         container_interface: "eth11"
         type: "vlan"
@@ -68,9 +68,10 @@ global_overrides:
     - network:
         group_binds:
           - neutron_linuxbridge_agent
-        container_bridge: "br-flat"
+        container_bridge: "flat"
         container_type: "veth"
         container_interface: "eth12"
+        host_bind_override: "flat-out"
         type: "flat"
         net_name: "flat"
     - network:
@@ -79,31 +80,31 @@ global_overrides:
           - nova_compute
           - neutron_linuxbridge_agent
         type: "raw"
-        container_bridge: "br-snet"
+        container_bridge: "snet"
         container_type: "veth"
         container_interface: "eth3"
         ip_from_q: "snet"
 
 shared-infra_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32
 
 repo-infra_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32
 
 os-infra_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32

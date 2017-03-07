@@ -2,8 +2,8 @@
 # /etc/openstack_deploy/conf.d/heat.yml
 orchestration_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32

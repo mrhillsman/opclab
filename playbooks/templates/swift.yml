@@ -3,8 +3,8 @@
 # swift-proxy
 global_overrides:
   swift:
-    storage_network: 'br-storage'
-    replication_network: 'br-storage'
+    storage_network: 'storage'
+    replication_network: 'storage'
     part_power: 8
     mount_point: /srv/node
     drives:
@@ -22,21 +22,21 @@ global_overrides:
 
 swift-proxy_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
     container_vars:
       swift_proxy_vars:
         read_affinity: "r1=100"
         write_affinity: "r1"
         write_affinity_node_count: "2 * replicas"
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
     container_vars:
       swift_proxy_vars:
         read_affinity: "r2=100"
         write_affinity: "r2"
         write_affinity_node_count: "2 * replicas"
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32
     container_vars:
       swift_proxy_vars:
         read_affinity: "r3=100"
@@ -46,21 +46,21 @@ swift-proxy_hosts:
 
 swift_hosts:
   swift01:
-    ip: 172.29.176.140
+    ip: 172.29.176.70
     container_vars:
       swift_vars:
         limit_container_types: swift
         zone: 0
         region: 1
   swift02:
-    ip: 172.29.176.141
+    ip: 172.29.176.71
     container_vars:
       swift_vars:
         limit_container_types: swift
         zone: 0
         region: 1
   swift03:
-    ip: 172.29.176.142
+    ip: 172.29.176.72
     container_vars:
       swift_vars:
         limit_container_types: swift

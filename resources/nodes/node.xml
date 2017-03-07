@@ -10,8 +10,8 @@
     <acpi/>
     <apic/>
   </features>
-  <cpu mode='host-model'>
-    <model fallback='allow'/>
+  <cpu mode='custom' match='exact'>
+    <model fallback='forbid'>SandyBridge</model>
   </cpu>
   <clock offset='utc'>
     <timer name='rtc' tickpolicy='catchup'/>

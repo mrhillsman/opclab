@@ -78,7 +78,7 @@ done
 
 # Remove any existing snapshots
 echo -e "Removing all snapshots"
-for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print }'`
+for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla|api|service|deploy/ { print }'`
 do
   for j in `virsh snapshot-list --name $i`
   do
@@ -88,16 +88,16 @@ done
 
 # Force shutdown and remove all instances
 echo -e "Shutting down and undefining all instances"
-for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print }'`; do virsh destroy $i; done;
-for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print }'`; do virsh undefine $i; done;
+for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla|api|service|deploy/ { print }'`; do virsh destroy $i; done;
+for i in `virsh list --all --name|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla|api|service|deploy/ { print }'`; do virsh undefine $i; done;
 
 # Delete all disks
 echo -e "Removing all node block devices"
-for a in `virsh vol-list --pool storage|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla/ { print $1 }'`; do virsh vol-delete $a storage; done;
+for a in `virsh vol-list --pool storage|awk '/infra|network|compute|storage|cinder|ceph|swift|object|logger|kolla|api|service|deploy/ { print $1 }'`; do virsh vol-delete $a storage; done;
 
 # Remove instances from OnMetal /etc/hosts
 echo -e "Cleaning up /etc/hosts"
-sed -i '/.*\(infra\|network\|compute\|storage\|cinder\|ceph\|swift\|object\|logger\|kolla\).*/d' /etc/hosts
+sed -i '/.*\(infra\|network\|compute\|storage\|cinder\|ceph\|swift\|object\|logger\|kolla\|api\|service\|deploy\).*/d' /etc/hosts
 echo -e "Cleaning up inventory\n"
 : > /root/opclab/inventory
 echo -e "Cleaning arp cache"
@@ -106,4 +106,6 @@ cd /root/opclab
 echo -e "Removing lab configuration file"
 rm /root/.labconfig
 
-echo -e "Lab has been successfully destroyed"
+for i in `seq 1 7`; do
+  echo -e "LAB DEMOLISHED!!! HULK SMASH!!!"
+done

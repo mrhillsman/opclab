@@ -1,29 +1,35 @@
 {
+    "api": {
+        "api01": "20",
+        "api02": "21"
+    },
     "infra": {
-        "infra01": "101",
-        "infra02": "102",
-        "infra03": "103"
+        "infra01": "30",
+        "infra02": "31",
+        "infra03": "32"
     },
     "network": {
-        "network01": "240",
-        "network02": "241"
-    },
-    "logging": {
-        "logger01": "110"
+        "network01": "40",
+        "network02": "41"
     },
     "compute": {
-        "compute01": "120",
-        "compute02": "121",
-        "compute03": "122"
+        "compute01": "50",
+        "compute02": "51",
+        "compute03": "52"
     },
     "storage": {
-        "cinder01": "130",
-        "cinder02": "131",
-        "cinder03": "132"
+        "cinder01": "60",
+        "cinder02": "61",
+        "cinder03": "62"
     },
     "object": {
-        "swift01": "140",
-        "swift02": "141",
-        "swift03": "142"
+        "swift01": "70",
+        "swift02": "71",
+        "swift03": "72"
+    },
+    "logging": {
+        "logger01": "80",
+        "logger02": "81",
+        "logger03": "82"
     }
 }

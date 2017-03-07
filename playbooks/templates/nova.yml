@@ -2,8 +2,8 @@
 # /etc/openstack_deploy/conf.d/nova.yml
 compute_hosts:
   compute01:
-    ip: 172.29.176.120
+    ip: 172.29.176.50
   compute02:
-    ip: 172.29.176.121
+    ip: 172.29.176.51
   compute03:
-    ip: 172.29.176.122
+    ip: 172.29.176.52

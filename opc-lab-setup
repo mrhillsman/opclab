@@ -51,7 +51,7 @@ else
 fi
 
 # Node types
-TYPES=( infra network logging compute object storage ceph kolla utility )
+TYPES=( infra network logging compute object storage ceph kolla api service utility )
 
 function wait_ssh() {
 echo "Waiting for all nodes to become available."
@@ -153,10 +153,10 @@ for node in $(get_all_hosts); do
     echo -e "Updating /etc/network/interfaces.d/node.cfg of node: ${node%%":"*}\n"
     echo -e "Updating hostname of node: ${node%%":"*}\n"
     guestfish -d ${node%%":"*} -i <<EOG
-command "sed -i -e 's/nodebase/${node%%":"*}/g' -e 's/10.5.0.5/10.5.0.${node:(-3)}/' /etc/hosts"
-sh 'sed -i -e "s/nodebase/${node%%":"*}/g" -e "s/10.5.0.5/10.5.0.${node:(-3)}/" /etc/network/interfaces'
+command "sed -i -e 's/nodebase/${node%%":"*}/g' -e 's/10.5.0.5/10.5.0.${node#*":"}/' /etc/hosts"
+sh 'sed -i -e "s/nodebase/${node%%":"*}/g" -e "s/10.5.0.5/10.5.0.${node#*":"}/" /etc/network/interfaces'
 sh 'sed -i -re "s/nodebase/${node%%":"*}/g" /etc/network/interfaces.d/node.cfg'
-sh 'sed -i -re "s/(([0-9]{1,3}[.]){3})(5)/\1${node:(-3)}/g" /etc/network/interfaces.d/node.cfg'
+sh 'sed -i -re "s/(([0-9]{1,3}[.]){3})(5)/\1${node#*":"}/g" /etc/network/interfaces.d/node.cfg'
 sh 'echo ${node%%":"*} > /etc/hostname'
 EOG
   else
@@ -216,7 +216,7 @@ if [ ${LAB_CONFIG} != 'kolla' ]; then
   if [ ${rc} -eq 0 ]; then
     echo -e "Generating deploy hosts file"
     for node in $(get_all_hosts); do
-      echo -e "172.29.176.${node:(-3)}\t${node%%":"*}" >> /root/opclab/hosts
+      echo -e "172.29.176.${node#*":"}\t${node%%":"*}" >> /root/opclab/hosts
     done
     echo -e "Adding hosts file to deploy"
     virt-copy-in -d deploy /root/opclab/hosts /etc
@@ -242,7 +242,7 @@ echo -e "Configuration succeeded for lab: ${LAB_CONFIG}\n"
 echo -e "Login for all nodes user: root | password: stack\n"
 for node in $(get_all_hosts); do
   if [ ${LAB_CONFIG} != 'kolla' ]; then
-    echo -e "Node Name: ${node%%":"*}\t\tDRAC IP: 172.29.176.${node:(-3)}\n"
+    echo -e "Node Name: ${node%%":"*}\t\tDRAC IP: 172.29.176.${node#*":"}\n"
   else
     echo -e "Node Name: ${node%%":"*}\t\tDRAC IP: 10.5.0.${node:8:2}\n"
   fi
@@ -251,7 +251,7 @@ done
 echo -e "Updating /etc/hosts with lab nodes\n"
 for node in $(get_all_hosts); do
   if [ ${LAB_CONFIG} != 'kolla' ]; then
-    echo -e "10.5.0.${node:(-3)}\t${node%%":"*}" >> /etc/hosts
+    echo -e "10.5.0.${node#*":"}\t${node%%":"*}" >> /etc/hosts
   else
     echo -e "10.5.0.${node:8:2}\t${node%%":"*}" >> /etc/hosts
   fi
@@ -288,10 +288,10 @@ for node in $(get_host_type ceph); do
   done
 done
 
-echo -e "Create \"Mint Condition\" snapshots"
-for node in $(get_all_hosts); do
-  virsh snapshot-create-as --domain ${node%%":"*} --name ${node%%":"*}-mint --atomic --description 'Mint Condition'
-done
+#echo -e "Create \"Mint Condition\" snapshots"
+#for node in $(get_all_hosts); do
+#  virsh snapshot-create-as --domain ${node%%":"*} --name ${node%%":"*}-mint --atomic --description 'Mint Condition'
+#done
 
 echo -e "Starting lab nodes"
 for node in $(get_all_hosts); do
@@ -302,6 +302,11 @@ done
 
 # Wait here for all nodes to be booted and ready with SSH
 wait_ssh
+
+echo -e "Create \"Mint Condition\" snapshots"
+for node in $(get_all_hosts); do
+  virsh snapshot-create-as --domain ${node%%":"*} --name ${node%%":"*}-mint --atomic --description 'Mint Condition'
+done
 
 echo -e "Storing lab configuration used"
 echo ${LAB_CONFIG} > /root/.labconfig

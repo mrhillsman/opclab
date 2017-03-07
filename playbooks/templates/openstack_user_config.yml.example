@@ -81,8 +81,8 @@
 #
 # The management network includes a router (gateway) on 172.29.176.1 and
 # DNS servers on 172.29.176.11-12. The deployment includes seven target
-# servers on 172.29.176.101-103, 172.29.176.111, 172.29.236.121, and
-# 172.29.176.131. However, the inventory generator automatically excludes
+# servers on 172.29.176.30-103, 172.29.176.111, 172.29.236.121, and
+# 172.29.176.61. However, the inventory generator automatically excludes
 # these IP addresses. The deployment host itself isn't automatically
 # excluded. Network policy at this particular example organization
 # also reserves 231-254 in the last octet at the high end of the range for
@@ -284,11 +284,11 @@
 #
 # shared-infra_hosts:
 #   infra1:
-#     ip: 172.29.176.101
+#     ip: 172.29.176.30
 #   infra2:
-#     ip: 172.29.176.102
+#     ip: 172.29.176.31
 #   infra3:
-#     ip: 172.29.176.103
+#     ip: 172.29.176.32
 #
 # --------
 #
@@ -310,11 +310,11 @@
 #
 # repo-infra_hosts:
 #   infra1:
-#     ip: 172.29.176.101
+#     ip: 172.29.176.30
 #   infra2:
-#     ip: 172.29.176.102
+#     ip: 172.29.176.31
 #   infra3:
-#     ip: 172.29.176.103
+#     ip: 172.29.176.32
 #
 # If you choose not to implement repository target hosts, you must configure
 # the 'openstack_repo_url' variable in the user_variables.yml file to
@@ -340,11 +340,11 @@
 #
 # os-infra_hosts:
 #   infra1:
-#     ip: 172.29.176.101
+#     ip: 172.29.176.30
 #   infra2:
-#     ip: 172.29.176.102
+#     ip: 172.29.176.31
 #   infra3:
-#     ip: 172.29.176.103
+#     ip: 172.29.176.32
 #
 # --------
 #
@@ -366,11 +366,11 @@
 #
 # identity_hosts:
 #   infra1:
-#     ip: 172.29.176.101
+#     ip: 172.29.176.30
 #   infra2:
-#     ip: 172.29.176.102
+#     ip: 172.29.176.31
 #   infra3:
-#     ip: 172.29.176.103
+#     ip: 172.29.176.32
 #
 # --------
 #
@@ -392,11 +392,11 @@
 #
 # network_hosts:
 #   infra1:
-#     ip: 172.29.176.101
+#     ip: 172.29.176.30
 #   infra2:
-#     ip: 172.29.176.102
+#     ip: 172.29.176.31
 #   infra3:
-#     ip: 172.29.176.103
+#     ip: 172.29.176.32
 #
 # --------
 #
@@ -418,7 +418,7 @@
 #
 # compute_hosts:
 #   compute1:
-#     ip: 172.29.176.121
+#     ip: 172.29.176.51
 #
 # --------
 #
@@ -440,11 +440,11 @@
 #
 # storage-infra_hosts:
 #   infra1:
-#     ip: 172.29.176.101
+#     ip: 172.29.176.30
 #   infra2:
-#     ip: 172.29.176.102
+#     ip: 172.29.176.31
 #   infra3:
-#     ip: 172.29.176.103
+#     ip: 172.29.176.32
 #
 # --------
 #
@@ -562,7 +562,7 @@
 #
 # storage_hosts:
 #   lvm-storage1:
-#     ip: 172.29.176.131
+#     ip: 172.29.176.61
 #
 # Example:
 #

@@ -2,15 +2,15 @@
 # /etc/openstack_deploy/conf.d/cinder.yml
 storage-infra_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32
 
 storage_hosts:
   cinder01:
-    ip: 172.29.176.130
+    ip: 172.29.176.60
     container_vars:
       cinder_storage_availability_zone: nova
       cinder_default_availability_zone: nova
@@ -20,9 +20,9 @@ storage_hosts:
           volume_group: cinder-volumes
           volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
           volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: 172.29.176.130
+          iscsi_ip_address: 172.29.176.60
   cinder02:
-    ip: 172.29.176.131
+    ip: 172.29.176.61
     container_vars:
       cinder_storage_availability_zone: nova
       cinder_default_availability_zone: nova
@@ -32,9 +32,9 @@ storage_hosts:
           volume_group: cinder-volumes
           volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
           volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: 172.29.176.131
+          iscsi_ip_address: 172.29.176.61
   cinder03:
-    ip: 172.29.176.132
+    ip: 172.29.176.62
     container_vars:
       cinder_storage_availability_zone: nova
       cinder_default_availability_zone: nova
@@ -44,4 +44,4 @@ storage_hosts:
           volume_group: cinder-volumes
           volume_driver: cinder.volume.drivers.lvm.LVMVolumeDriver
           volume_backend_name: LVM_iSCSI
-          iscsi_ip_address: 172.29.176.132
+          iscsi_ip_address: 172.29.176.62

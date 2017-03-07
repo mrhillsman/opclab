@@ -144,8 +144,8 @@ haproxy_ssl: True
 # Make sure that this is set correctly according to the CIDR used for your
 # internal and external addresses.
 haproxy_keepalived_internal_vip_cidr: "{{internal_lb_vip_address}}/22"
-haproxy_keepalived_external_vip_cidr: "{{external_lb_vip_address}}/22"
-haproxy_keepalived_internal_interface: br-mgmt
+haproxy_keepalived_external_vip_cidr: "172.24.96.249/22"
+haproxy_keepalived_internal_interface: mgmt
 haproxy_keepalived_external_interface: bond0
 keepalived_use_latest_stable: True
 
@@ -291,3 +291,6 @@ nova_nova_conf_overrides:
   DEFAULT:
     nova_force_config_drive: False
     config_drive_format: vfat
+
+nova_spice_html5proxy_base_uri: "{{ nova_spice_html5proxy_base_proto }}://104.130.19.191:{{ nova_spice_html5proxy_base_port }}"
+nova_novncproxy_base_uri: "{{ nova_novncproxy_proto }}://104.130.19.191:{{ nova_novncproxy_port }}"

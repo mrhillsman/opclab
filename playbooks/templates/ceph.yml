@@ -2,15 +2,15 @@
 # /etc/openstack_deploy/conf.d/ceph.yml
 storage-infra_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32
 
 storage_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
     container_vars:
       cinder_backends:
         limit_container_types: cinder_volume
@@ -27,7 +27,7 @@ storage_hosts:
           rbd_user: "{{ cinder_ceph_client }}"
           rbd_secret_uuid: "{{ cinder_ceph_client_uuid }}"
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
     container_vars:
       cinder_backends:
         limit_container_types: cinder_volume
@@ -44,7 +44,7 @@ storage_hosts:
           rbd_user: "{{ cinder_ceph_client }}"
           rbd_secret_uuid: "{{ cinder_ceph_client_uuid }}"
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32
     container_vars:
       cinder_backends:
         limit_container_types: cinder_volume
@@ -63,15 +63,15 @@ storage_hosts:
 
 mons_hosts:
   infra01:
-    ip: 172.29.176.101
+    ip: 172.29.176.30
   infra02:
-    ip: 172.29.176.102
+    ip: 172.29.176.31
   infra03:
-    ip: 172.29.176.103
+    ip: 172.29.176.32
 
 osds_hosts:
   ceph01:
-    ip: 172.29.176.150
+    ip: 172.29.176.90
     container_vars:
     # The devices must be specified in conjunction with raw_journal_devices below.
     # If you want one journal device per five drives, specify the same journal_device five times.
@@ -90,7 +90,7 @@ osds_hosts:
         - /dev/vde
         - /dev/vdf
   ceph02:
-    ip: 172.29.176.151
+    ip: 172.29.176.91
     container_vars:
     # The devices must be specified in conjunction with raw_journal_devices below.
     # If you want one journal device per five drives, specify the same journal_device five times.
@@ -109,7 +109,7 @@ osds_hosts:
         - /dev/vde
         - /dev/vdf
   ceph03:
-    ip: 172.29.176.152
+    ip: 172.29.176.92
     container_vars:
     # The devices must be specified in conjunction with raw_journal_devices below.
     # If you want one journal device per five drives, specify the same journal_device five times.
