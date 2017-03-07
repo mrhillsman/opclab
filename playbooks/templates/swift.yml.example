@@ -313,21 +313,21 @@
 # swift-proxy_hosts:
 #
 #   infra1:
-#     ip: 172.29.236.101
+#     ip: 172.29.176.101
 #     container_vars:
 #       swift_proxy_vars:
 #         read_affinity: "r1=100"
 #         write_affinity: "r1"
 #         write_affinity_node_count: "2 * replicas"
 #   infra2:
-#     ip: 172.29.236.102
+#     ip: 172.29.176.102
 #     container_vars:
 #       swift_proxy_vars:
 #         read_affinity: "r2=100"
 #         write_affinity: "r2"
 #         write_affinity_node_count: "2 * replicas"
 #   infra3:
-#     ip: 172.29.236.103
+#     ip: 172.29.176.103
 #     container_vars:
 #       swift_proxy_vars:
 #         read_affinity: "r3=100"
@@ -444,22 +444,22 @@
 #
 # swift_hosts:
 #   swift-node1:
-#     ip: 172.29.236.151
+#     ip: 172.29.176.151
 #     container_vars:
 #       swift_vars:
 #         zone: 0
 #   swift-node2:
-#     ip: 172.29.236.152
+#     ip: 172.29.176.152
 #     container_vars:
 #       swift_vars:
 #         zone: 1
 #   swift-node3:
-#     ip: 172.29.236.153
+#     ip: 172.29.176.153
 #     container_vars:
 #       swift_vars:
 #         zone: 2
 #   swift-node4:
-#     ip: 172.29.236.154
+#     ip: 172.29.176.154
 #     container_vars:
 #       swift_vars:
 #         storage_ip: 198.51.100.11

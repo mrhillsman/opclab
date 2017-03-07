@@ -211,7 +211,7 @@ def create_node(node, set_type, address):
 
 def add_node_to_host_etc_hosts(node, address):
     with open('/etc/hosts', 'a') as f:
-        line_to_add = "172.29.236.{0}\t{1}".format(address, node)
+        line_to_add = "10.5.0.{0}\t{1}".format(address, node)
         f.write(line_to_add)
 
 

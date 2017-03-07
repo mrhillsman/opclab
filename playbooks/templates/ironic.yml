@@ -2,8 +2,8 @@
 # /etc/openstack_deploy/conf.d/ironic.yml
 ironic-infra_hosts:
   infra01:
-    ip: 172.29.236.101
+    ip: 172.29.176.101
   infra02:
-    ip: 172.29.236.102
+    ip: 172.29.176.102
   infra03:
-    ip: 172.29.236.103
+    ip: 172.29.176.103

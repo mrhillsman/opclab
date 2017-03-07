@@ -17,7 +17,7 @@ __Node Count, Role, and Addresses__
 #### Network Considerations
 __Path for packet from one instance to 8.8.8.8 based on the following post install neutron commands:__  
 neutron net-create --provider:physical_network=vlan --provider:network_type=vlan --provider:segmentation_id=205 --router:external ext-net  
-neutron subnet-create ext-net 10.240.0.0/24 --name ext-subnet --gateway=10.240.0.1 --allocation-pool start=10.240.0.11,end=10.240.0.254 --enable_dhcp=false  
+neutron subnet-create ext-net 10.225.0.0/24 --name ext-subnet --gateway=10.225.0.1 --allocation-pool start=10.225.0.11,end=10.225.0.254 --enable_dhcp=false  
 neutron net-create --provider:physical_network=vlan --provider:network_type=vlan --provider:segmentation_id=206 --shared int-net  
 neutron subnet-create int-net 10.241.0.0/24 --name int-subnet --dns-nameservers list=true 8.8.8.8 8.8.4.4  
 neutron router-create ext-rtr  

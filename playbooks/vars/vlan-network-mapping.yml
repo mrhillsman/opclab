@@ -1,0 +1,17 @@
+# 200 - MANAGEMENT_NET - 172.29.176.0/22
+# 201 - STORAGE_NET    - 172.29.180.0/22
+# 202 - OVERLAY_NET    - 172.29.184.0/22
+# 203 - SNET_NET       - 172.29.188.0/22
+# 204 - FLAT_NET       - 172.29.192.0/22
+pxe_network: 10.5.0.0/24
+
+management_vlan: 200
+management_network: 172.29.176.0/22
+storage_vlan: 201
+storage_network: 172.29.180.0/22
+overlay_vlan: 202
+overlay_network: 172.29.184.0/22
+service_vlan: 203
+service_network: 172.29.188.0/22
+flat_vlan: 204
+flat_network: 172.29.192.0/22

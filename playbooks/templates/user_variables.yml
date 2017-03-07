@@ -104,3 +104,12 @@ nova_nova_conf_overrides:
 neutron_neutron_conf_overrides:
   DEFAULT:
     l3_ha: False
+
+# Live Migration
+#nova_libvirtd_listen_tls: 0
+#nova_libvirtd_listen_tcp: 1
+#nova_libvirtd_auth_tcp: "none"
+
+nova_spice_html5proxy_base_uri: "{{ nova_spice_html5proxy_base_proto }}://104.130.19.191:{{ nova_spice_html5proxy_base_port }}"
+
+nova_novncproxy_base_uri: "{{ nova_novncproxy_proto }}://104.130.19.191:{{ nova_novncproxy_port }}"

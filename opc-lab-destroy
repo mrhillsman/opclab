@@ -106,6 +106,4 @@ cd /root/opclab
 echo -e "Removing lab configuration file"
 rm /root/.labconfig
 
-for i in `seq 1 7`; do
-  echo -e "LAB DEMOLISHED!!! HULK SMASH!!!"
-done
+echo -e "Lab has been successfully destroyed"

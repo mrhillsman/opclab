@@ -1,6 +1,5 @@
 ---
-# /etc/openstack_deploy/conf.d/gnocchi.yml
-metrics_hosts:
+image_hosts:
   infra01:
     ip: 172.29.176.101
   infra02:

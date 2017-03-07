@@ -1,20 +1,20 @@
 ---
 # /etc/openstack_deploy/openstack_user_config.yml
 cidr_networks:
-  container: 172.29.236.0/22
-  tunnel: 172.29.240.0/22
-  storage: 172.29.244.0/22
-  snet: 172.29.248.0/22
+  container: 172.29.176.0/22
+  tunnel: 172.29.180.0/22
+  storage: 172.29.184.0/22
+  snet: 172.29.188.0/22
 
 used_ips:
-  - 172.29.236.1,172.29.236.254
-  - 172.29.240.1,172.29.240.254
-  - 172.29.244.1,172.29.244.254
-  - 172.29.248.1,172.29.248.254
+  - 172.29.176.1,172.29.176.254
+  - 172.29.180.1,172.29.180.254
+  - 172.29.184.1,172.29.184.254
+  - 172.29.188.1,172.29.188.254
 
 global_overrides:
-  internal_lb_vip_address: 172.29.236.100
-  external_lb_vip_address: 172.24.96.249
+  internal_lb_vip_address: 172.29.176.100
+  external_lb_vip_address: 192.168.0.249
   management_bridge: "br-mgmt"
   tunnel_bridge: "br-vxlan"
   provider_networks:
@@ -63,15 +63,14 @@ global_overrides:
         container_type: "veth"
         container_interface: "eth11"
         type: "vlan"
-        range: "206:215"
+        range: "205:209"
         net_name: "vlan"
     - network:
         group_binds:
           - neutron_linuxbridge_agent
-        container_bridge: "br-vlan"
+        container_bridge: "br-flat"
         container_type: "veth"
         container_interface: "eth12"
-        host_bind_override: "br-vlan-flat"
         type: "flat"
         net_name: "flat"
     - network:
@@ -87,24 +86,24 @@ global_overrides:
 
 shared-infra_hosts:
   infra01:
-    ip: 172.29.236.101
+    ip: 172.29.176.101
   infra02:
-    ip: 172.29.236.102
+    ip: 172.29.176.102
   infra03:
-    ip: 172.29.236.103
+    ip: 172.29.176.103
 
 repo-infra_hosts:
   infra01:
-    ip: 172.29.236.101
+    ip: 172.29.176.101
   infra02:
-    ip: 172.29.236.102
+    ip: 172.29.176.102
   infra03:
-    ip: 172.29.236.103
+    ip: 172.29.176.103
 
 os-infra_hosts:
   infra01:
-    ip: 172.29.236.101
+    ip: 172.29.176.101
   infra02:
-    ip: 172.29.236.102
+    ip: 172.29.176.102
   infra03:
-    ip: 172.29.236.103
+    ip: 172.29.176.103

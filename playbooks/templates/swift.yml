@@ -22,21 +22,21 @@ global_overrides:
 
 swift-proxy_hosts:
   infra01:
-    ip: 172.29.236.101
+    ip: 172.29.176.101
     container_vars:
       swift_proxy_vars:
         read_affinity: "r1=100"
         write_affinity: "r1"
         write_affinity_node_count: "2 * replicas"
   infra02:
-    ip: 172.29.236.102
+    ip: 172.29.176.102
     container_vars:
       swift_proxy_vars:
         read_affinity: "r2=100"
         write_affinity: "r2"
         write_affinity_node_count: "2 * replicas"
   infra03:
-    ip: 172.29.236.103
+    ip: 172.29.176.103
     container_vars:
       swift_proxy_vars:
         read_affinity: "r3=100"
@@ -46,21 +46,21 @@ swift-proxy_hosts:
 
 swift_hosts:
   swift01:
-    ip: 172.29.236.140
+    ip: 172.29.176.140
     container_vars:
       swift_vars:
         limit_container_types: swift
         zone: 0
         region: 1
   swift02:
-    ip: 172.29.236.141
+    ip: 172.29.176.141
     container_vars:
       swift_vars:
         limit_container_types: swift
         zone: 0
         region: 1
   swift03:
-    ip: 172.29.236.142
+    ip: 172.29.176.142
     container_vars:
       swift_vars:
         limit_container_types: swift

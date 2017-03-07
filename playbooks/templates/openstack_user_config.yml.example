@@ -49,7 +49,7 @@
 #
 # Define networks for a typical deployment.
 #
-#   - Management network on 172.29.236.0/22. Control plane for infrastructure
+#   - Management network on 172.29.176.0/22. Control plane for infrastructure
 #     services, OpenStack APIs, and horizon.
 #   - Tunnel network on 172.29.240.0/22. Data plane for project (tenant) VXLAN
 #     networks.
@@ -57,7 +57,7 @@
 #     as cinder and swift.
 #
 # cidr_networks:
-#   container: 172.29.236.0/22
+#   container: 172.29.176.0/22
 #   tunnel: 172.29.240.0/22
 #   storage: 172.29.244.0/22
 #
@@ -79,18 +79,18 @@
 #
 # Example:
 #
-# The management network includes a router (gateway) on 172.29.236.1 and
-# DNS servers on 172.29.236.11-12. The deployment includes seven target
-# servers on 172.29.236.101-103, 172.29.236.111, 172.29.236.121, and
-# 172.29.236.131. However, the inventory generator automatically excludes
+# The management network includes a router (gateway) on 172.29.176.1 and
+# DNS servers on 172.29.176.11-12. The deployment includes seven target
+# servers on 172.29.176.101-103, 172.29.176.111, 172.29.236.121, and
+# 172.29.176.131. However, the inventory generator automatically excludes
 # these IP addresses. The deployment host itself isn't automatically
 # excluded. Network policy at this particular example organization
 # also reserves 231-254 in the last octet at the high end of the range for
 # network device management.
 #
 # used_ips:
-#   - 172.29.236.1
-#   - "172.29.236.100,172.29.236.200"
+#   - 172.29.176.1
+#   - "172.29.176.100,172.29.176.200"
 #   - "172.29.240.100,172.29.240.200"
 #   - "172.29.244.100,172.29.244.200"
 #
@@ -284,11 +284,11 @@
 #
 # shared-infra_hosts:
 #   infra1:
-#     ip: 172.29.236.101
+#     ip: 172.29.176.101
 #   infra2:
-#     ip: 172.29.236.102
+#     ip: 172.29.176.102
 #   infra3:
-#     ip: 172.29.236.103
+#     ip: 172.29.176.103
 #
 # --------
 #
@@ -310,11 +310,11 @@
 #
 # repo-infra_hosts:
 #   infra1:
-#     ip: 172.29.236.101
+#     ip: 172.29.176.101
 #   infra2:
-#     ip: 172.29.236.102
+#     ip: 172.29.176.102
 #   infra3:
-#     ip: 172.29.236.103
+#     ip: 172.29.176.103
 #
 # If you choose not to implement repository target hosts, you must configure
 # the 'openstack_repo_url' variable in the user_variables.yml file to
@@ -340,11 +340,11 @@
 #
 # os-infra_hosts:
 #   infra1:
-#     ip: 172.29.236.101
+#     ip: 172.29.176.101
 #   infra2:
-#     ip: 172.29.236.102
+#     ip: 172.29.176.102
 #   infra3:
-#     ip: 172.29.236.103
+#     ip: 172.29.176.103
 #
 # --------
 #
@@ -366,11 +366,11 @@
 #
 # identity_hosts:
 #   infra1:
-#     ip: 172.29.236.101
+#     ip: 172.29.176.101
 #   infra2:
-#     ip: 172.29.236.102
+#     ip: 172.29.176.102
 #   infra3:
-#     ip: 172.29.236.103
+#     ip: 172.29.176.103
 #
 # --------
 #
@@ -392,11 +392,11 @@
 #
 # network_hosts:
 #   infra1:
-#     ip: 172.29.236.101
+#     ip: 172.29.176.101
 #   infra2:
-#     ip: 172.29.236.102
+#     ip: 172.29.176.102
 #   infra3:
-#     ip: 172.29.236.103
+#     ip: 172.29.176.103
 #
 # --------
 #
@@ -418,7 +418,7 @@
 #
 # compute_hosts:
 #   compute1:
-#     ip: 172.29.236.121
+#     ip: 172.29.176.121
 #
 # --------
 #
@@ -440,11 +440,11 @@
 #
 # storage-infra_hosts:
 #   infra1:
-#     ip: 172.29.236.101
+#     ip: 172.29.176.101
 #   infra2:
-#     ip: 172.29.236.102
+#     ip: 172.29.176.102
 #   infra3:
-#     ip: 172.29.236.103
+#     ip: 172.29.176.103
 #
 # --------
 #
@@ -562,7 +562,7 @@
 #
 # storage_hosts:
 #   lvm-storage1:
-#     ip: 172.29.236.131
+#     ip: 172.29.176.131
 #
 # Example:
 #
@@ -640,4 +640,4 @@
 #
 # log_hosts:
 #   log1:
-#     ip: 172.29.236.171
+#     ip: 172.29.176.171

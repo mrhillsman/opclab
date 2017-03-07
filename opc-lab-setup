@@ -51,17 +51,17 @@ else
 fi
 
 # Node types
-TYPES=( infra network logging compute object storage ceph kolla )
+TYPES=( infra network logging compute object storage ceph kolla utility )
 
 function wait_ssh() {
 echo "Waiting for all nodes to become available."
 for node in $(get_all_hosts); do
   if [ ${LAB_CONFIG} != 'kolla' ]; then
-    echo "Waiting for node: ${node%%":"*} on 172.29.236.${node#*":"}"
-    ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 172.29.236.${node#*":"} exit > /dev/null
+    echo "Waiting for node: ${node%%":"*} on 172.29.176.${node#*":"}"
+    ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 172.29.176.${node#*":"} exit > /dev/null
     while test $? -gt 0; do
       sleep 7
-      ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 172.29.236.${node#*":"} exit > /dev/null
+      ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 172.29.176.${node#*":"} exit > /dev/null
     done
   else
     echo "Waiting for node: ${node%%":"*} on 10.5.0.${node:8:2}"
@@ -209,21 +209,21 @@ for node in $(get_host_type ceph); do
   done
 done
 
-# Check if infra01 exists, if not, skip infra01 specific tasks
+# Check if deploy exists, if not, skip deploy specific tasks
 if [ ${LAB_CONFIG} != 'kolla' ]; then
-  virsh domstate infra01
+  virsh domstate deploy
   rc=$?
   if [ ${rc} -eq 0 ]; then
-    echo -e "Generating infra01 hosts file"
+    echo -e "Generating deploy hosts file"
     for node in $(get_all_hosts); do
-      echo -e "172.29.236.${node:(-3)}\t${node%%":"*}" >> /root/opclab/hosts
+      echo -e "172.29.176.${node:(-3)}\t${node%%":"*}" >> /root/opclab/hosts
     done
-    echo -e "Adding hosts file to infra01"
-    virt-copy-in -d infra01 /root/opclab/hosts /etc
+    echo -e "Adding hosts file to deploy"
+    virt-copy-in -d deploy /root/opclab/hosts /etc
     rm -f /root/opclab/hosts
 
-    echo -e "Adding jq helper library to infra01"
-    virt-copy-in -d infra01 /root/opclab/resources/files/jq /usr/local/bin
+    echo -e "Adding jq helper library to deploy"
+    virt-copy-in -d deploy /root/opclab/resources/files/jq /usr/local/bin
   fi
 else
   echo -e "Generating kolla01 hosts file"
@@ -242,7 +242,7 @@ echo -e "Configuration succeeded for lab: ${LAB_CONFIG}\n"
 echo -e "Login for all nodes user: root | password: stack\n"
 for node in $(get_all_hosts); do
   if [ ${LAB_CONFIG} != 'kolla' ]; then
-    echo -e "Node Name: ${node%%":"*}\t\tDRAC IP: 172.29.236.${node:(-3)}\n"
+    echo -e "Node Name: ${node%%":"*}\t\tDRAC IP: 172.29.176.${node:(-3)}\n"
   else
     echo -e "Node Name: ${node%%":"*}\t\tDRAC IP: 10.5.0.${node:8:2}\n"
   fi
@@ -251,7 +251,7 @@ done
 echo -e "Updating /etc/hosts with lab nodes\n"
 for node in $(get_all_hosts); do
   if [ ${LAB_CONFIG} != 'kolla' ]; then
-    echo -e "172.29.236.${node:(-3)}\t${node%%":"*}" >> /etc/hosts
+    echo -e "10.5.0.${node:(-3)}\t${node%%":"*}" >> /etc/hosts
   else
     echo -e "10.5.0.${node:8:2}\t${node%%":"*}" >> /etc/hosts
   fi

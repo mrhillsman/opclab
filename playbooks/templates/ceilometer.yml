@@ -1,0 +1,22 @@
+# The compute hosts that will run the ceilometer compute agent. This list
+# should contain every host in the compute_hosts list.
+metering-compute_hosts:
+  compute01:
+    ip: 172.29.176.120
+  compute02:
+    ip: 172.29.176.121
+  compute03:
+    ip: 172.29.176.122
+
+# The infra hosts that will run the central agents.
+# For running Ceilometer in HA for workload partitioning, see
+# http://docs.openstack.org/admin-guide/telemetry-data-collection.html#support-for-ha-deployment
+metering-infra_hosts:
+  infra01:
+    ip: 172.29.176.101
+  # See note regarding HA configuration above.
+  #infra02:
+  #  ip: 172.29.176.102
+  # See note regarding HA configuration above.
+  #infra03:
+  #  ip: 172.29.176.103

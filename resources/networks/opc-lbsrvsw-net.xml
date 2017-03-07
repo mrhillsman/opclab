@@ -5,7 +5,8 @@
   <virtualport type='openvswitch'/>
   <portgroup name='vlan-all' default='yes'>
     <vlan trunk='yes'>
-      <tag id='200' nativeMode='untagged'/>
+      <tag id='199' nativeMode='untagged'/>
+      <tag id='200'/>
       <tag id='201'/>
       <tag id='202'/>
       <tag id='203'/>
@@ -41,13 +42,17 @@
   </portgroup>
   <portgroup name='bond0'>
     <vlan trunk='yes'>
-      <tag id='200' nativeMode='untagged'/>
+      <tag id='199' nativeMode='untagged'/>
+      <tag id='200'/>
       <tag id='201'/>
       <tag id='202'/>
     </vlan>
   </portgroup>
   <portgroup name='bond1'>
     <vlan trunk='yes'>
+      <tag id='200'/>
+      <tag id='201'/>
+      <tag id='202'/>
       <tag id='203'/>
       <tag id='204'/>
       <tag id='205'/>

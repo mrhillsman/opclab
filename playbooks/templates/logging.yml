@@ -2,4 +2,4 @@
 # /etc/openstack_deploy/conf.d/logging.yml
 log_hosts:
   logger01:
-    ip: 172.29.236.110
+    ip: 172.29.176.110
