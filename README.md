@@ -1,5 +1,5 @@
 # WIP (DRAFT STATUS)
-<span style="color: red; background-color: black;">## Currently there is an issue upstream that if you reboot
+<span style="color: red"> Currently there is an issue upstream that if you reboot
 any node with containers the containers will come back without IP addresses.
 The issue appears to be that lxc-net is masked by systemd by default. Running -
 lxc-system-manage system-rebuild - resolves it.</span>
