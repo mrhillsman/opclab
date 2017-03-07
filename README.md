@@ -143,8 +143,8 @@ Node Count | Role | Addresses
 
 ### Network Considerations ###  
 
-Firewalls: 192.168.0.2-7/24  
-LoadBalancers: 192.168.0.249-254/24  
+Firewall: 192.168.0.2/24  
+LoadBalancer: 192.168.0.249/24  
 Node Public Addresses: 192.168.220.20-99/24  
 OpenStack Public/Floating IPs: 192.168.231-235.12-254/24  
 
