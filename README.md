@@ -1,8 +1,5 @@
 # WIP (DRAFT STATUS)
-<span style="color: red"> Currently there is an issue upstream that if you reboot
-any node with containers the containers will come back without IP addresses.
-The issue appears to be that lxc-net is masked by systemd by default. Running -
-lxc-system-manage system-rebuild - resolves it.</span>
+# Currently there is an issue upstream that if you reboot any node with containers the containers will come back without IP addresses. The issue appears to be that lxc-net is masked by systemd by default. Running - lxc-system-manage system-rebuild - resolves it.
 
 [![Stories in Ready](https://badge.waffle.io/mrhillsman/opclab.svg?label=ready&title=Ready)](http://waffle.io/mrhillsman/opclab)  
 
