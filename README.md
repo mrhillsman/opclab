@@ -71,6 +71,10 @@ ansible-playbook -i inventory playbooks/prepare-swift-disks.yml
 # Prepare cinder Nodes
 ansible-playbook -i inventory playbooks/prepare-cinder-disks.yml
 
+# Setup firewall rules to access OpenStack and VMs
+# you will need to update the bond interface used and the ip address in the playbook
+ansible-playbook -i inventory playbooks/setup-host-firewall-rules.yml -t add-rules
+
 # Vanilla OpenStack-Ansible (master if branch not specified)
 ansible-playbook -i inventory playbooks/prepare-for-osa.yml -e "openstack_release='stable/newton'"
 
