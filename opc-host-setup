@@ -244,22 +244,6 @@ echo -e "Building virtual network infrastructure\n"
 pushd resources/networks
 
 # Dynamically generate networks that depend on host bond interfaces
-cat << EON > opc-drac00-net.xml
-<network>
-  <name>drac00</name>
-  <forward dev='${__HOST_BOND_INT__[0]}' mode='nat'>
-    <nat>
-      <port start='1024' end='65535'/>
-    </nat>
-    <interface dev='${__HOST_BOND_INT__[0]}'/>
-  </forward>
-  <bridge name='virbr2' stp='off' delay='0'/>
-  <domain name='drac00'/>
-  <ip address='10.5.0.1' netmask='255.255.255.0'>
-  </ip>
-</network>
-EON
-
 cat << EON > opc-public00-net.xml
 <network>
   <name>public00</name>
@@ -272,6 +256,44 @@ cat << EON > opc-public00-net.xml
   <bridge name='virbr0' stp='off' delay='0'/>
   <domain name='public00'/>
   <ip address='192.168.0.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.220.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.221.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.222.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.223.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.224.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.225.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.226.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.227.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.228.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.229.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.230.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.231.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.232.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.233.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.234.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.235.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.236.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.237.1' netmask='255.255.255.0'>
+  </ip>
+  <ip address='192.168.238.1' netmask='255.255.255.0'>
   </ip>
   <ip address='192.168.239.1' netmask='255.255.255.0'>
   </ip>
@@ -315,6 +337,23 @@ cat << EON > opc-snet00-net.xml
   </ip>
 </network>
 EON
+
+cat << EON > opc-drac00-net.xml
+<network>
+  <name>drac00</name>
+  <forward dev='${__HOST_BOND_INT__[0]}' mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+    <interface dev='${__HOST_BOND_INT__[0]}'/>
+  </forward>
+  <bridge name='virbr2' stp='off' delay='0'/>
+  <domain name='drac00'/>
+  <ip address='10.5.0.1' netmask='255.255.255.0'>
+  </ip>
+</network>
+EON
+
 
 for i in opc-*-net.xml
 do
@@ -362,7 +401,7 @@ ovs-vsctl add-port lbsrvsw int-lbsrvsw
 ovs-vsctl set Port int-lbsrvsw tag=202
 ip link set dev int-lbsrvsw up
 ip link set dev ext-lbsrvsw up
-ip addr add 172.29.236.90/22 dev ext-lbsrvsw
+ip addr add 172.29.176.100/22 dev ext-lbsrvsw
 
 echo -e "Setting TZ to UTC"
 unlink /etc/localtime
