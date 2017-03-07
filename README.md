@@ -116,7 +116,7 @@ cd /opt/rpc-openstack && ./scripts/deploy.sh
 
 ## Post Installation Considerations - INFORMATIONAL ONLY ##
 
-### Login Considerations ###  
+### Login Considerations  
 __OnMetal Host__  
 SSH Public Key Authentication required during build  
 *you can modify /etc/ssh/sshd_config to allow password authentication*  
@@ -152,7 +152,7 @@ Tenant VLANS: 205-209
 
 Network | IP Block(s) | VLAN
 --------|-------------|-----
-Host/Node | 10.239.0.0/24 | 201
+Host/Node | 10.168.220.0/24 | 201
 Gateway | 10.240.0.0/24 | 205
 Container | 172.29.236.0/22 | 202
 Tunnel/Overlay | 172.29.240.0/22 |
