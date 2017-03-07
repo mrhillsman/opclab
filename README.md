@@ -44,7 +44,7 @@ __Server will reboot and take about 4 minutes to become accessible again__
 
 # Installation
 
-## Verified - OpenStack Upstream (using openstack-ansible)##
+## Verified - OpenStack Upstream - Ubuntu (using openstack-ansible)##
 ```shell
 # Install required packages
 apt-get update
@@ -79,7 +79,13 @@ cd /opt/openstack-ansible/playbooks
 openstack-ansible setup-everything.yml -f15
 ```
 
-## WIP - Rackspace Open Private Cloud (using openstack-ansible)##
+## WIP - OpenStack Upstream - CentOS (using openstack-ansible)##
+
+```shell
+
+```
+
+## WIP - Rackspace Open Private Cloud - Ubuntu (using openstack-ansible)##
 
 ```shell
 git clone --recursive -b <your_branch> http://github.com/rcbops/rpc-openstack
@@ -97,23 +103,18 @@ python /opt/rpc-openstack/openstack-ansible/playbooks/inventory/dynamic_inventor
 cd /opt/rpc-openstack && ./scripts/deploy.sh
 ```
 
-## WIP - OpenStack Upstream (using kolla)##
+## WIP - OpenStack Upstream - Ubuntu (using kolla)##
 
 ```shell
-git clone --recursive -b <your_branch> http://github.com/rcbops/rpc-openstack
-cd rpc-openstack
 
-cp -R openstack-ansible/etc/openstack_deploy /etc/openstack_deploy
-python openstack-ansible/scripts/pw-token-gen.py --file /etc/openstack_deploy/user_secrets.yml
-scripts/update-yaml.py /etc/openstack_deploy/user_variables.yml rpcd/etc/openstack_deploy/user_variables.yml
-cp rpcd/etc/openstack_deploy/user_extras_*.yml /etc/openstack_deploy
-cp rpcd/etc/openstack_deploy/env.d/* /etc/openstack_deploy/env.d
-cp /root/openstack_user_config.yml /etc/openstack_deploy/openstack_user_config.yml
-cp /root/swift.yml /etc/openstack_deploy/conf.d/swift.yml
-python /opt/rpc-openstack/openstack-ansible/playbooks/inventory/dynamic_inventory.py > /dev/null
-
-cd /opt/rpc-openstack && ./scripts/deploy.sh
 ```
+
+## WIP - OpenStack Upstream - CentOS (using kolla)##
+
+```shell
+
+```
+
 
 ## Post Installation Considerations - INFORMATIONAL ONLY ##
 
