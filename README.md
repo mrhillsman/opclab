@@ -145,24 +145,23 @@ Node Count | Role | Addresses
 
 Firewalls: 192.168.0.2-7/24  
 LoadBalancers: 192.168.0.249-254/24  
-Node Public Addresses: 192.168.239.101-254/24  
-OpenStack Public/Floating IPs: 192.168.240.12-254/24  
+Node Public Addresses: 192.168.220.20-99/24  
+OpenStack Public/Floating IPs: 192.168.231-235.12-254/24  
 
 Tenant VLANS: 205-209  
 
 Network | IP Block(s) | VLAN
 --------|-------------|-----
 Host/Node | 10.168.220.0/24 | 201
-Gateway | 10.240.0.0/24 | 205
-Container | 172.29.236.0/22 | 202
-Tunnel/Overlay | 172.29.240.0/22 |
-Storage | 172.29.244..0/22 |
-Swift | 172.29.248.0/22 |
+Gateway | 10.168.231.0/24 | 205
+Container | 172.29.176.0/22 | 200
+Tunnel/Overlay | 172.29.180.0/22 | 201
+Storage | 172.29.184.0/22 | 202
+Swift | 172.29.188.0/22 |
 DRAC | 10.5.0.0/24 |
 ServiceNet | 10.6.0.0/24 |
 Public | 192.168.0.0/24 |
-       | 192.168.239.0/24 |
-       | 192.168.240.0/24 |
+       | 192.168.220-235.0/24 |
 
 __NAT Translations on Firewall__  
 (examples)  
