@@ -60,7 +60,7 @@
         - remove-prerouting-rules
 
     - name: "Remove all filter table forward rules"
-      shell: "/sbin/iptables -t filter -D FORWARD -i bond0.135 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+      shell: "/sbin/iptables -t filter -D FORWARD -i bond0.135 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW -j ACCEPT"
       args:
         executable: /bin/bash
       with_items: "{{ ports }}"
@@ -88,8 +88,28 @@
         - add-rules
         - add-prerouting-rules
 
+    - name: "Allow established sessions by default inside the forward chain"
+      shell: "/sbin/iptables -t filter -I FORWARD 1 -p tcp -m state --state RELATED,ESTABLISHED -j ACCEPT"
+      args:
+        executable: /bin/bash
+      # will use below when insert is supported
+      # iptables:
+      #   chain: FORWARD
+      #   ctstate:
+      #     - RELATED
+      #     - ESTABLISHED
+      #   destination: 192.168.0.249
+      #   in_interface: bond0.135
+      #   jump: ACCEPT
+      #   protocol: tcp
+      #   state: present
+      #   table: filter
+      tags:
+        - add-rules
+        - add-forward-rules
+
     - name: "Add ports to filter table forward chain"
-      shell: "/sbin/iptables -t filter -I FORWARD -i bond0.135 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+      shell: "/sbin/iptables -t filter -I FORWARD -i bond0.135 -o virbr0 -p tcp -d 192.168.0.249 --dport {{ item }} -m state --state NEW -j ACCEPT"
       args:
         executable: /bin/bash
       # will use below when insert is supported
