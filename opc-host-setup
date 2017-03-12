@@ -398,10 +398,10 @@ popd
 echo -e "Adding ip link to OpenStack environment"
 ip link add name ext-lbsrvsw type veth peer name int-lbsrvsw
 ovs-vsctl add-port lbsrvsw int-lbsrvsw
-ovs-vsctl set Port int-lbsrvsw tag=202
+ovs-vsctl set Port int-lbsrvsw tag=200
 ip link set dev int-lbsrvsw up
 ip link set dev ext-lbsrvsw up
-ip addr add 172.29.176.100/22 dev ext-lbsrvsw
+ip addr add 172.29.176.99/22 dev ext-lbsrvsw
 
 echo -e "Setting TZ to UTC"
 unlink /etc/localtime
