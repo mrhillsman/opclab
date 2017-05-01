@@ -16,7 +16,8 @@ parser.add_argument('-n', '--name', action='store', dest='node_name', type=str,
                     help='Name of the node, ex. ceph01')
 parser.add_argument('-t', '--type', action='store', dest='node_type', type=str,
                     choices=('infra', 'logging', 'compute', 'storage', 'object', 'ceph'),
-                    help='Type of node [infra|logging|compute|storage|object|ceph]')
+                    help='Type of node
+[infra|logging|compute|storage|object|ceph|utility]')
 parser.add_argument('-a', '--address', action='store', dest='node_address', type=str,
                     help='IP address to use; last octet, ex. 170')
 parser.add_argument('-r', '--ram', action='store', dest='ram', type=int,
@@ -59,7 +60,8 @@ connection = libvirt.open('qemu:///system')
 storage_pool = connection.storagePoolLookupByName('storage')
 backing_image = '/var/lib/libvirt/images/nodebase.qcow2'
 default_xml = '/etc/libvirt/qemu/{}.xml'.format(node_name)
-volume_types = ['infra', 'logging', 'compute', 'storage', 'object', 'ceph']
+volume_types = ['infra', 'logging', 'compute', 'storage', 'object', 'ceph',
+'utility']
 storage_types = ['storage', 'object', 'ceph']
 default_ram = '8388608'
 default_cpu = '8'
