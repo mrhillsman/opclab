@@ -21,9 +21,9 @@ parser.add_argument('-t', '--type', action='store', dest='node_type', type=str,
 parser.add_argument('-a', '--address', action='store', dest='node_address', type=str,
                     help='IP address to use; last octet, ex. 170')
 parser.add_argument('-r', '--ram', action='store', dest='ram', type=int,
-                    help='(Unavailable) RAM to allocate to node')
+                    help='RAM to allocate to node')
 parser.add_argument('-p', '--cpu', action='store', dest='cpu', type=int,
-                    help='(Unavailable) Number of vCPUs to allocate to node')
+                    help='Number of vCPUs to allocate to node')
 parser.add_argument('-b', '--basexml', action='store', dest='base_volume_xml', type=str,
                     help='(Unavailable) Description of base volume; https://libvirt.org/formatstorage.html#StorageVol')
 parser.add_argument('-s', '--basesize', action='store', dest='base_volume_size', type=int,
