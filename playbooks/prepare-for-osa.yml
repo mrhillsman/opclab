@@ -115,6 +115,7 @@
         #- aodh
         #- ceph
         - cinder
+        - glance
         #- gnocchi
         - haproxy
         - heat
