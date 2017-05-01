@@ -1,7 +1,6 @@
 {
-    "api": {
-        "api01": "20",
-        "api02": "21"
+    "utility": {
+        "deploy": "20"
     },
     "infra": {
         "infra01": "30",
@@ -14,13 +13,10 @@
     },
     "compute": {
         "compute01": "50",
-        "compute02": "51",
-        "compute03": "52"
+        "compute02": "51"
     },
     "storage": {
-        "cinder01": "60",
-        "cinder02": "61",
-        "cinder03": "62"
+        "cinder01": "60"
     },
     "object": {
         "swift01": "70",
@@ -28,8 +24,6 @@
         "swift03": "72"
     },
     "logging": {
-        "logger01": "80",
-        "logger02": "81",
-        "logger03": "82"
+        "logger01": "80"
     }
 }
